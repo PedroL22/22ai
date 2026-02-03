@@ -232,7 +232,8 @@ export const ChatMenu = ({
 
   return (
     <>
-      <div
+      <button
+        type='button'
         title={chatTitle || 'Untitled'}
         aria-label={`Chat: ${chatTitle || 'Untitled'}`}
         className={cn(
@@ -242,12 +243,6 @@ export const ChatMenu = ({
           }
         )}
         onClick={handleChatClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleChatClick()
-          }
-        }}
       >
         <div className='flex w-full items-center justify-between'>
           <ContextMenu>
@@ -303,7 +298,7 @@ export const ChatMenu = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </button>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
