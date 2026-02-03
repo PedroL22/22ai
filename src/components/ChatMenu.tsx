@@ -232,23 +232,27 @@ export const ChatMenu = ({
 
   return (
     <>
-      <button
-        type='button'
-        title={chatTitle || 'Untitled'}
-        aria-label={`Chat: ${chatTitle || 'Untitled'}`}
+      <div
         className={cn(
-          'group flex w-full cursor-pointer items-center justify-end gap-3 rounded-lg p-3 transition-all ease-in hover:bg-accent',
+          'group relative flex w-full items-center justify-end gap-3 rounded-lg p-3 transition-all ease-in',
           {
             'bg-accent dark:bg-accent/35': isSelected,
           }
         )}
-        onClick={handleChatClick}
       >
-        <div className='flex w-full items-center justify-between'>
+        <button
+          type='button'
+          title={chatTitle || 'Untitled'}
+          aria-label={`Chat: ${chatTitle || 'Untitled'}`}
+          className='flex flex-1 cursor-pointer items-center rounded-lg hover:bg-accent'
+          onClick={handleChatClick}
+        >
           <ContextMenu>
             <ContextMenuTrigger asChild>
               <div className='w-full cursor-pointer'>
-                <span className='block max-w-54 truncate text-muted-foreground text-sm'>{chatTitle || ''}</span>
+                <span className='block max-w-54 truncate text-start text-muted-foreground text-sm'>
+                  {chatTitle || ''}
+                </span>
               </div>
             </ContextMenuTrigger>
 
@@ -256,49 +260,49 @@ export const ChatMenu = ({
               <MenuItems />
             </ContextMenuContent>
           </ContextMenu>
+        </button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-6 shrink-0 cursor-pointer opacity-0 hover:bg-accent/50 group-hover:opacity-100'
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
-              >
-                <MoreHorizontal className='size-4' />
-              </Button>
-            </DropdownMenuTrigger>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='size-6 shrink-0 cursor-pointer opacity-0 hover:bg-accent/50 group-hover:opacity-100'
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+            >
+              <MoreHorizontal className='size-4' />
+            </Button>
+          </DropdownMenuTrigger>
 
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={handlePin}>
-                <Pin className='size-4' />
-                {isPinned ? 'Unpin chat' : 'Pin chat'}
-              </DropdownMenuItem>
+          <DropdownMenuContent align='end'>
+            <DropdownMenuItem className='flex items-center gap-2' onClick={handlePin}>
+              <Pin className='size-4' />
+              {isPinned ? 'Unpin chat' : 'Pin chat'}
+            </DropdownMenuItem>
 
-              <DropdownMenuItem className='flex items-center gap-2' onClick={handleShare}>
-                <Share className='size-4' />
-                {isShared ? 'Unshare chat' : 'Share chat'}
-              </DropdownMenuItem>
+            <DropdownMenuItem className='flex items-center gap-2' onClick={handleShare}>
+              <Share className='size-4' />
+              {isShared ? 'Unshare chat' : 'Share chat'}
+            </DropdownMenuItem>
 
-              <DropdownMenuItem className='flex items-center gap-2' onClick={handleRename}>
-                <Edit className='size-4' />
-                Rename
-              </DropdownMenuItem>
+            <DropdownMenuItem className='flex items-center gap-2' onClick={handleRename}>
+              <Edit className='size-4' />
+              Rename
+            </DropdownMenuItem>
 
-              <DropdownMenuItem
-                className='flex items-center gap-2 text-destructive focus:text-destructive'
-                onClick={handleDelete}
-              >
-                <Trash2 className='size-4' />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </button>
+            <DropdownMenuItem
+              className='flex items-center gap-2 text-destructive focus:text-destructive'
+              onClick={handleDelete}
+            >
+              <Trash2 className='size-4' />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
