@@ -183,6 +183,19 @@ const makeApiCallWithFallback = async <T>(
 
       console.error(`❌ OpenRouter API error (attempt ${attempts}/${maxRetries}): `, error)
 
+      // Check for 404 errors (model not found) - don't retry these
+      const err = error as any
+      if (err?.status === 404 || err?.code === 404 || err?.message?.includes('404')) {
+        // Extract model name from error message (pattern: provider/model-name:variant)
+        // Example: "404 No endpoints found for google/gemini-2.0-flash-exp:free."
+        const modelMatch = err?.message?.match(/([a-z0-9-]+\/[a-z0-9.-]+(?::[a-z]+)?)/i)
+        const modelName = modelMatch ? modelMatch[1] : 'the requested model'
+        return {
+          success: false,
+          error: `Model "${modelName}" is not available on OpenRouter. It may have been deprecated or removed. Please try a different model.`,
+        }
+      }
+
       // If it's not a failover error, don't retry
       if (!isFailoverError(error)) {
         break

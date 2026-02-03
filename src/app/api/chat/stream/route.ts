@@ -40,7 +40,12 @@ export async function POST(request: NextRequest) {
 
     if (!data.stream) {
       console.error('❌ No stream data available: ', data.error)
-      return NextResponse.json({ error: data.error ?? 'No stream data available' }, { status: 500 })
+      // Return 400 for model not found errors, 500 for other errors
+      const isModelNotFound = data.error?.includes('not available') || data.error?.includes('404')
+      return NextResponse.json(
+        { error: data.error ?? 'No stream data available' },
+        { status: isModelNotFound ? 400 : 500 }
+      )
     }
 
     // Create a ReadableStream for Server-Sent Events
