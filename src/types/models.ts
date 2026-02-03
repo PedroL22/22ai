@@ -1,13 +1,15 @@
 export type ModelsIds =
   // Free models
+  | 'openai/gpt-oss-120b:free'
+  | 'openai/gpt-oss-20b:free'
   | 'google/gemma-3-27b-it:free'
   | 'google/gemma-3-12b-it:free'
-  | 'openai/gpt-oss-120b:free'
   | 'meta-llama/llama-3.3-70b-instruct:free'
-  | 'meta-llama/llama-3.1-405b-instruct:free'
+  | 'meta-llama/llama-3.2-3b-instruct:free'
   | 'deepseek/deepseek-r1-0528:free'
+  | 'qwen/qwen3-next-80b-a3b-instruct:free'
   | 'qwen/qwen3-coder:free'
-  | 'qwen/qwen-2.5-vl-7b-instruct:free'
+  | 'z-ai/glm-4.5-air:free'
   // BYOK models
   | 'openai/gpt-5.2:byok'
   | 'openai/gpt-5-mini:byok'
@@ -21,18 +23,19 @@ export type ModelsIds =
   | 'google/gemini-2.5-flash-lite:byok'
   | 'google/gemini-2.0-flash:byok'
   | 'grok/grok-4:byok'
-  | 'deepseek/deepseek-v3.2:byok'
 
 export type ModelsNames =
   // Free models
   | 'GPT-OSS 120B'
+  | 'GPT-OSS 20B'
   | 'Gemma 3 27B'
   | 'Gemma 3 12B'
   | 'Llama 3.3 70B Instruct'
-  | 'Llama 3.1 405B Instruct'
+  | 'Llama 3.2 3B Instruct'
   | 'DeepSeek R1 0528'
+  | 'Qwen3 Next 80B A3B Instruct'
   | 'Qwen3 Coder'
-  | 'Qwen2.5 VL 7B'
+  | 'GLM 4.5 Air'
   // BYOK models
   | 'GPT 5.2'
   | 'GPT 5 Mini'
@@ -45,10 +48,9 @@ export type ModelsNames =
   | 'Gemini 2.5 Pro'
   | 'Gemini 2.5 Flash Lite'
   | 'Gemini 2.0 Flash'
-  | 'DeepSeek V3.2'
   | 'Grok 4'
 
-export type ModelsDevelopers = 'OpenAI' | 'Anthropic' | 'Google' | 'Meta' | 'DeepSeek' | 'Grok' | 'Qwen'
+export type ModelsDevelopers = 'OpenAI' | 'Anthropic' | 'Google' | 'Meta' | 'DeepSeek' | 'xAi' | 'Alibaba' | 'Z.ai'
 
 export type Model = {
   id: ModelsIds
@@ -60,6 +62,22 @@ export type Model = {
 
 export const MODELS: Model[] = [
   // Free models
+  {
+    id: 'openai/gpt-oss-120b:free',
+    name: 'GPT-OSS 120B',
+    developer: 'OpenAI',
+    description:
+      "OpenAI's historic open-weight model. This 117B MoE model is designed for high-reasoning and agentic workflows without API costs.",
+    isFree: true,
+  },
+  {
+    id: 'openai/gpt-oss-20b:free',
+    name: 'GPT-OSS 20B',
+    developer: 'OpenAI',
+    description:
+      "OpenAI's compact open-weight model optimized for fast responses and efficient reasoning on everyday tasks.",
+    isFree: true,
+  },
   {
     id: 'google/gemma-3-27b-it:free',
     name: 'Gemma 3 27B',
@@ -77,14 +95,6 @@ export const MODELS: Model[] = [
     isFree: true,
   },
   {
-    id: 'openai/gpt-oss-120b:free',
-    name: 'GPT-OSS 120B',
-    developer: 'OpenAI',
-    description:
-      "OpenAI's historic open-weight model. This 117B MoE model is designed for high-reasoning and agentic workflows without API costs.",
-    isFree: true,
-  },
-  {
     id: 'meta-llama/llama-3.3-70b-instruct:free',
     name: 'Llama 3.3 70B Instruct',
     developer: 'Meta',
@@ -93,11 +103,11 @@ export const MODELS: Model[] = [
     isFree: true,
   },
   {
-    id: 'meta-llama/llama-3.1-405b-instruct:free',
-    name: 'Llama 3.1 405B Instruct',
+    id: 'meta-llama/llama-3.2-3b-instruct:free',
+    name: 'Llama 3.2 3B Instruct',
     developer: 'Meta',
     description:
-      "Meta's largest open-weights model, built for the most complex reasoning tasks, research applications, and high-quality data generation.",
+      "Meta's lightweight instruction model tuned for fast, efficient chats and low-latency reasoning on smaller workloads.",
     isFree: true,
   },
   {
@@ -109,19 +119,26 @@ export const MODELS: Model[] = [
     isFree: true,
   },
   {
+    id: 'qwen/qwen3-next-80b-a3b-instruct:free',
+    name: 'Qwen3 Next 80B A3B Instruct',
+    developer: 'Alibaba',
+    description:
+      'A next-gen instruction model from Qwen focused on strong reasoning and long-form responses at high capacity.',
+    isFree: true,
+  },
+  {
     id: 'qwen/qwen3-coder:free',
     name: 'Qwen3 Coder',
-    developer: 'Qwen',
+    developer: 'Alibaba',
     description:
       "Alibaba's premier coding model, optimized for repository-level reasoning, function calling, and complex agentic software development.",
     isFree: true,
   },
   {
-    id: 'qwen/qwen-2.5-vl-7b-instruct:free',
-    name: 'Qwen2.5 VL 7B',
-    developer: 'Qwen',
-    description:
-      'A vision-language model proficient at analyzing documents, charts, and acting as a visual agent for interactive tasks.',
+    id: 'z-ai/glm-4.5-air:free',
+    name: 'GLM 4.5 Air',
+    developer: 'Z.ai',
+    description: 'Z.ai lightweight flagship tuned for fast chat, tool use, and reliable instruction following.',
     isFree: true,
   },
   // BYOK models
@@ -212,17 +229,9 @@ export const MODELS: Model[] = [
   {
     id: 'grok/grok-4:byok',
     name: 'Grok 4',
-    developer: 'Grok',
+    developer: 'xAi',
     description:
       'The latest flagship model from xAI, blending deep expertise in science and finance with massive knowledge and advanced logic.',
-    isFree: false,
-  },
-  {
-    id: 'deepseek/deepseek-v3.2:byok',
-    name: 'DeepSeek V3.2',
-    developer: 'DeepSeek',
-    description:
-      "DeepSeek's 2026 value leader, matching the performance of much larger frontier models at a fraction of the cost.",
     isFree: false,
   },
 ]

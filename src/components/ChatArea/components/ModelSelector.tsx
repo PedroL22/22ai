@@ -33,7 +33,7 @@ export const ModelSelector = ({ trigger, onModelSelect, selectedModelId }: Model
     if (model.developer === 'OpenAI') return !openaiApiKey
     if (model.developer === 'Anthropic') return !anthropicApiKey
     if (model.developer === 'Google') return !geminiApiKey
-    if (model.developer === 'Grok') return !grokApiKey
+    if (model.developer === 'xAi') return !grokApiKey
     return false
   }
 
@@ -54,13 +54,24 @@ export const ModelSelector = ({ trigger, onModelSelect, selectedModelId }: Model
   }, {})
 
   // List of developers in desired order (always visible)
-  const developerOrder: ModelsDevelopers[] = ['OpenAI', 'Anthropic', 'Google', 'Meta', 'DeepSeek', 'Grok', 'Qwen']
+  const developerOrder: ModelsDevelopers[] = [
+    'OpenAI',
+    'Anthropic',
+    'Google',
+    'Meta',
+    'DeepSeek',
+    'xAi',
+    'Alibaba',
+    'Z.ai',
+  ]
 
   const getBlockReason = (model: (typeof MODELS)[number]) => {
     if (model.developer === 'OpenAI') return 'Add your OpenAI API key in Settings to use this model.'
     if (model.developer === 'Anthropic') return 'Add your Anthropic API key in Settings to use this model.'
     if (model.developer === 'Google') return 'Add your Gemini API key in Settings to use this model.'
-    if (model.developer === 'Grok') return 'Add your Grok API key in Settings to use this model.'
+    if (model.developer === 'xAi') return 'Add your xAi API key in Settings to use this model.'
+    if (model.developer === 'Alibaba') return 'Add your Alibaba API key in Settings to use this model.'
+    if (model.developer === 'Z.ai') return 'Add your Z.ai API key in Settings to use this model.'
     return 'API key required.'
   }
 

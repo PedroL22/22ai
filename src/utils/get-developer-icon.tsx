@@ -16,10 +16,12 @@ export const getDeveloperIcon = (developer: ModelsDevelopers) => {
       return <Image src='/images/icons/meta.svg' alt='Meta Logo' width={16} height={16} className='size-4' />
     case 'DeepSeek':
       return <Image src='/images/icons/deepseek.svg' alt='DeepSeek Logo' width={16} height={16} className='size-4' />
-    case 'Grok':
-      return <Image src='/images/icons/grok.svg' alt='Grok Logo' width={16} height={16} className='size-4' />
-    case 'Qwen':
-      return <Image src='/images/icons/qwen.svg' alt='Qwen Logo' width={16} height={16} className='size-4' />
+    case 'xAi':
+      return <Image src='/images/icons/xai.svg' alt='xAi Logo' width={16} height={16} className='size-4' />
+    case 'Alibaba':
+      return <Image src='/images/icons/alibaba.svg' alt='Alibaba Logo' width={16} height={16} className='size-4' />
+    case 'Z.ai':
+      return <Image src='/images/icons/zai.svg' alt='Z.ai Logo' width={16} height={16} className='size-4' />
 
     default:
       return <Sparkles className='size-4 text-zinc-400' />
