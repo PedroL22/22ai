@@ -18,8 +18,11 @@ export const getModelName = (modelId: ModelsIds): ModelsNames => {
     'anthropic/claude-4-sonnet:byok': 'Claude 4 Sonnet',
     'anthropic/claude-4-opus:byok': 'Claude 4 Opus',
     'anthropic/claude-3.7-sonnet:byok': 'Claude 3.7 Sonnet',
-    'google/gemini-3-pro:byok': 'Gemini 3 Pro',
-    'google/gemini-3-flash:byok': 'Gemini 3 Flash',
+    'google/gemini-3-flash-preview:byok': 'Gemini 3 Flash Preview',
+    'google/gemini-2.5-flash:byok': 'Gemini 2.5 Flash',
+    'google/gemini-2.5-pro:byok': 'Gemini 2.5 Pro',
+    'google/gemini-2.5-flash-lite:byok': 'Gemini 2.5 Flash Lite',
+    'google/gemini-2.0-flash:byok': 'Gemini 2.0 Flash',
     'grok/grok-4:byok': 'Grok 4',
     'deepseek/deepseek-v3.2:byok': 'DeepSeek V3.2',
   }

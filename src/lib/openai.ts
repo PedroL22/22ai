@@ -65,6 +65,60 @@ async function createAnthropicChatCompletion(
   return { success: true, message: data.content?.[0]?.text || '' }
 }
 
+const parseGeminiRetryDelay = (rawDelay?: string): string | null => {
+  if (!rawDelay) return null
+  const trimmed = rawDelay.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+const getGeminiRetryDelayFromBody = (errorBody: any): string | null => {
+  const retryDetail = errorBody?.error?.details?.find(
+    (detail: any) => detail?.['@type'] === 'type.googleapis.com/google.rpc.RetryInfo'
+  )
+  return parseGeminiRetryDelay(retryDetail?.retryDelay)
+}
+
+const getGeminiRetryDelayFromText = (errorText: string): string | null => {
+  const retryDelayMatch = errorText.match(/"retryDelay"\s*:\s*"([^"]+)"/i)
+  if (retryDelayMatch?.[1]) return parseGeminiRetryDelay(retryDelayMatch[1])
+  const retrySecondsMatch = errorText.match(/retry in\s+([0-9.]+)\s*s/i)
+  if (retrySecondsMatch?.[1]) return parseGeminiRetryDelay(`${retrySecondsMatch[1]}s`)
+  return null
+}
+
+const parseGeminiErrorBody = (errorText: string): any | null => {
+  try {
+    return JSON.parse(errorText)
+  } catch {
+    // Some Gemini errors come back as text/event-stream or wrapped strings.
+  }
+  const jsonMatch = errorText.match(/\{[\s\S]*\}/)
+  if (!jsonMatch?.[0]) return null
+  try {
+    return JSON.parse(jsonMatch[0])
+  } catch {
+    return null
+  }
+}
+
+const isGeminiRateLimitError = (errorBody: any, errorText: string): boolean => {
+  const errorCode = errorBody?.error?.code
+  const errorStatus = errorBody?.error?.status
+  return (
+    errorCode === 429 ||
+    errorStatus === 'RESOURCE_EXHAUSTED' ||
+    /RESOURCE_EXHAUSTED/i.test(errorText) ||
+    /quota exceeded/i.test(errorText) ||
+    /rate limit/i.test(errorText) ||
+    /429/.test(errorText)
+  )
+}
+
+const getGeminiRateLimitMessage = (modelName: string, retryDelay?: string | null): string => {
+  const retryText = retryDelay ? ` Retry in ${retryDelay}.` : ''
+  return `❌ Gemini rate limit exceeded for ${modelName}.${retryText} Check your Gemini API quota and billing.`
+}
+
 // Gemini native call (BYOK)
 async function createGeminiChatCompletion(messages: ChatMessage[], modelId: ModelsIds, apiKey: string, stream = false) {
   const modelName = modelId.replace(/^google\//, '').replace(/:byok$/, '')
@@ -75,21 +129,27 @@ async function createGeminiChatCompletion(messages: ChatMessage[], modelId: Mode
 
   // Note: Gemini has strict rules about roles. A system prompt is best handled by
   // prepending its content to the first user message for robust conversation flow.
-  let systemPrompt = messages.find((m) => m.role === 'system')?.content
+  const systemPrompt = messages.find((m) => m.role === 'system')?.content
   const conversationMessages = messages.filter((m) => m.role !== 'system')
 
-  if (
+  if (systemPrompt && conversationMessages.length === 0) {
+    // Handle edge case: if there are no conversation messages, create one from the system prompt
+    conversationMessages.push({ role: 'user', content: systemPrompt })
+  } else if (
     systemPrompt &&
     conversationMessages.length > 0 &&
     conversationMessages[0]?.role === 'user' &&
     typeof conversationMessages[0]?.content === 'string'
   ) {
+    // Prepend system prompt to first user message
     conversationMessages[0].content = `${systemPrompt}\n\n${conversationMessages[0].content}`
-    systemPrompt = undefined
+  } else if (systemPrompt && conversationMessages.length > 0) {
+    // System prompt exists but first message isn't a user message - prepend as user message
+    conversationMessages.unshift({ role: 'user', content: systemPrompt })
   }
 
   // Transform roles for Gemini API: 'assistant' must become 'model'
-  const contents = conversationMessages.map((m) => ({
+  const contents = conversationMessages.map((m: ChatMessage) => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
   }))
@@ -102,7 +162,15 @@ async function createGeminiChatCompletion(messages: ChatMessage[], modelId: Mode
     body: JSON.stringify(body),
   })
 
-  if (!res.ok) throw new Error(`❌ Gemini API error: ${await res.text()}`)
+  if (!res.ok) {
+    const errorText = await res.text()
+    const errorBody = parseGeminiErrorBody(errorText)
+    if (isGeminiRateLimitError(errorBody, errorText)) {
+      const retryDelay = getGeminiRetryDelayFromBody(errorBody) ?? getGeminiRetryDelayFromText(errorText)
+      throw new Error(getGeminiRateLimitMessage(modelName, retryDelay))
+    }
+    throw new Error(`❌ Gemini API error: ${errorText}`)
+  }
   if (stream) {
     return { success: true, stream: res.body }
   }

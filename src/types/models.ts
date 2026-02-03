@@ -15,8 +15,11 @@ export type ModelsIds =
   | 'anthropic/claude-4-sonnet:byok'
   | 'anthropic/claude-4-opus:byok'
   | 'anthropic/claude-3.7-sonnet:byok'
-  | 'google/gemini-3-pro:byok'
-  | 'google/gemini-3-flash:byok'
+  | 'google/gemini-3-flash-preview:byok'
+  | 'google/gemini-2.5-flash:byok'
+  | 'google/gemini-2.5-pro:byok'
+  | 'google/gemini-2.5-flash-lite:byok'
+  | 'google/gemini-2.0-flash:byok'
   | 'grok/grok-4:byok'
   | 'deepseek/deepseek-v3.2:byok'
 
@@ -37,8 +40,11 @@ export type ModelsNames =
   | 'Claude 4 Sonnet'
   | 'Claude 4 Opus'
   | 'Claude 3.7 Sonnet'
-  | 'Gemini 3 Pro'
-  | 'Gemini 3 Flash'
+  | 'Gemini 3 Flash Preview'
+  | 'Gemini 2.5 Flash'
+  | 'Gemini 2.5 Pro'
+  | 'Gemini 2.5 Flash Lite'
+  | 'Gemini 2.0 Flash'
   | 'DeepSeek V3.2'
   | 'Grok 4'
 
@@ -168,19 +174,39 @@ export const MODELS: Model[] = [
     isFree: false,
   },
   {
-    id: 'google/gemini-3-pro:byok',
-    name: 'Gemini 3 Pro',
+    id: 'google/gemini-3-flash-preview:byok',
+    name: 'Gemini 3 Flash Preview',
     developer: 'Google',
     description:
-      "Google's flagship reasoning model with a 1M token context window and native multimodal understanding across text, video, and audio.",
+      "Google's newest recommended Gemini preview, optimized for fast, capable responses across everyday tasks.",
     isFree: false,
   },
   {
-    id: 'google/gemini-3-flash:byok',
-    name: 'Gemini 3 Flash',
+    id: 'google/gemini-2.5-flash:byok',
+    name: 'Gemini 2.5 Flash',
     developer: 'Google',
-    description:
-      'A speed-optimized variant of Gemini 3, delivering near-Pro levels of intelligence with rapid response times for everyday tasks.',
+    description: 'A fast, general-purpose Gemini model tuned for responsive chat and routine work.',
+    isFree: false,
+  },
+  {
+    id: 'google/gemini-2.5-pro:byok',
+    name: 'Gemini 2.5 Pro',
+    developer: 'Google',
+    description: "Google's high-capability reasoning model for complex problem solving and deep analysis.",
+    isFree: false,
+  },
+  {
+    id: 'google/gemini-2.5-flash-lite:byok',
+    name: 'Gemini 2.5 Flash Lite',
+    developer: 'Google',
+    description: 'A lightweight, high-throughput Gemini model for high-volume chat and low-latency workflows.',
+    isFree: false,
+  },
+  {
+    id: 'google/gemini-2.0-flash:byok',
+    name: 'Gemini 2.0 Flash',
+    developer: 'Google',
+    description: 'A legacy Gemini Flash model maintained for compatibility and migration support.',
     isFree: false,
   },
   {
