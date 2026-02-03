@@ -52,16 +52,7 @@ export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) =>
   }, {})
 
   // List of developers in desired order (always visible)
-  const developerOrder: ModelsDevelopers[] = [
-    'OpenAI',
-    'Anthropic',
-    'Google',
-    'Meta',
-    'DeepSeek',
-    'Grok',
-    'Moonshot',
-    'Qwen',
-  ]
+  const developerOrder: ModelsDevelopers[] = ['OpenAI', 'Anthropic', 'Google', 'Meta', 'DeepSeek', 'Grok', 'Qwen']
 
   const getBlockReason = (model: (typeof MODELS)[number]) => {
     if (model.developer === 'OpenAI') return 'Add your OpenAI API key in Settings to use this model.'
