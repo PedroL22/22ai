@@ -90,9 +90,7 @@ export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) =>
           >
             <div className='flex items-center gap-2'>
               {selectedModel ? getDeveloperIcon(selectedModel.developer) : <Sparkles className='size-3' />}
-              <span className='truncate'>
-                {selectedModel ? <>{selectedModel.name}</> : <>{getModelName(selectedModelId)}</>}
-              </span>
+              <span className='truncate'>{selectedModel ? selectedModel.name : getModelName(selectedModelId)}</span>
               <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
             </div>
           </Button>

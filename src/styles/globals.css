@@ -9,10 +9,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: "JetBrains Mono", "Geist Mono", "Fira Code", "Berkeley Mono", "SF Mono", Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  --font-mono:
+    "JetBrains Mono", "Geist Mono", "Fira Code", "Berkeley Mono", "SF Mono", Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 }
 
 @theme inline {

@@ -2,21 +2,21 @@
 
 /* Improved code highlighting for different themes */
 .hljs {
-  background: transparent !important;
-  padding: 0 !important;
+  background: transparent;
+  padding: 0;
 }
 
 /* Math rendering improvements */
 .katex-display {
-  margin: 1.5rem 0 !important;
+  margin: 1.5rem 0;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
 .katex {
-  font-size: 1.4em !important;
-  display: flex !important;
-  justify-content: center !important;
+  font-size: 1.4em;
+  display: flex;
+  justify-content: center;
 }
 
 /* Dark theme code highlighting */
@@ -167,7 +167,7 @@ pre code {
 /* Responsive improvements for mobile */
 @media (max-width: 640px) {
   .katex-display {
-    font-size: 1rem !important;
+    font-size: 1rem;
   }
 
   pre {

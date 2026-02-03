@@ -68,7 +68,12 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
           className,
           children,
           ...props
-        }: { inline?: boolean; className?: string; children?: ReactNode; [key: string]: any }) => {
+        }: {
+          inline?: boolean
+          className?: string
+          children?: ReactNode
+          [key: string]: any
+        }) => {
           if (inline === true || (!className && !String(children).includes('\n'))) {
             return (
               <code

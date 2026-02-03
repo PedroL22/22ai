@@ -1,32 +1,40 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
+  "$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
+  "css": {
+    "parser": {
+      "allowWrongLineComments": true,
+      "cssModules": true,
+      "tailwindDirectives": true
+    }
   },
   "files": {
-    "ignoreUnknown": false,
-    "ignore": [
-      "node_modules/**",
-      "**/.next",
-      "**/dist",
-      "**/out",
-      "public/**/*.js",
-      "tsconfig*.json",
-      "**/routeTree.gen.ts",
-      "coverage/**"
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/.next",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/out",
+      "!**/public/**/*.js",
+      "!**/generated",
+      "!**/.turbo",
+      "!**/.env"
     ]
   },
   "formatter": {
-    "enabled": true,
     "attributePosition": "auto",
     "indentStyle": "space",
     "indentWidth": 2,
     "lineEnding": "lf",
     "lineWidth": 120
   },
-  "organizeImports": { "enabled": true },
   "javascript": {
     "formatter": {
       "arrowParentheses": "always",
@@ -47,8 +55,13 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
       "a11y": {
+        "noNoninteractiveTabindex": {
+          "level": "off"
+        },
+        "noStaticElementInteractions": {
+          "level": "warn"
+        },
         "recommended": true,
         "useAriaPropsForRole": {
           "level": "warn"
@@ -58,9 +71,6 @@
         },
         "useKeyWithMouseEvents": {
           "level": "warn"
-        },
-        "noNoninteractiveTabindex": {
-          "level": "off"
         }
       },
       "complexity": {
@@ -78,11 +88,7 @@
               }
             ]
           }
-        },
-        "noUnusedImports": "warn",
-        "noUnusedFunctionParameters": "warn",
-        "noUnusedLabels": "warn",
-        "noUnusedVariables": "warn"
+        }
       },
       "nursery": {
         "useSortedClasses": {
@@ -97,23 +103,38 @@
       "performance": {
         "recommended": true
       },
+      "recommended": true,
       "security": {
-        "recommended": true,
         "noDangerouslySetInnerHtml": {
           "level": "off"
-        }
+        },
+        "recommended": true
       },
       "style": {
-        "recommended": true,
         "noNonNullAssertion": {
           "level": "off"
-        }
+        },
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@phosphor-icons/react": "use “@phosphor-icons/react/dist/ssr” instead"
+            }
+          }
+        },
+        "recommended": true
       },
       "suspicious": {
-        "recommended": true,
         "noExplicitAny": {
           "level": "off"
-        }
+        },
+        "noNonNullAssertedOptionalChain": {
+          "level": "warn"
+        },
+        "noUnknownAtRules": {
+          "level": "off"
+        },
+        "recommended": true
       }
     }
   }

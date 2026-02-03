@@ -12,15 +12,7 @@ export const env = createEnv({
     CLERK_WEBHOOK_SECRET: z.string(),
     OPENROUTER_SITE_URL: z.string().url().optional(),
     OPENROUTER_SITE_NAME: z.string().optional(),
-    OPENROUTER_API_KEY_1: z.string(),
-    OPENROUTER_API_KEY_2: z.string().optional(),
-    OPENROUTER_API_KEY_3: z.string().optional(),
-    OPENROUTER_API_KEY_4: z.string().optional(),
-    OPENROUTER_API_KEY_5: z.string().optional(),
-    OPENROUTER_API_KEY_6: z.string().optional(),
-    OPENROUTER_API_KEY_7: z.string().optional(),
-    OPENROUTER_API_KEY_8: z.string().optional(),
-    OPENROUTER_API_KEY_9: z.string().optional(),
+    OPENROUTER_API_KEY: z.string(),
   },
 
   /**
@@ -51,15 +43,7 @@ export const env = createEnv({
     OPENROUTER_SITE_URL: process.env.OPENROUTER_SITE_URL,
     OPENROUTER_SITE_NAME: process.env.OPENROUTER_SITE_NAME,
     NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL: process.env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL,
-    OPENROUTER_API_KEY_1: process.env.OPENROUTER_API_KEY_1,
-    OPENROUTER_API_KEY_2: process.env.OPENROUTER_API_KEY_2,
-    OPENROUTER_API_KEY_3: process.env.OPENROUTER_API_KEY_3,
-    OPENROUTER_API_KEY_4: process.env.OPENROUTER_API_KEY_4,
-    OPENROUTER_API_KEY_5: process.env.OPENROUTER_API_KEY_5,
-    OPENROUTER_API_KEY_6: process.env.OPENROUTER_API_KEY_6,
-    OPENROUTER_API_KEY_7: process.env.OPENROUTER_API_KEY_7,
-    OPENROUTER_API_KEY_8: process.env.OPENROUTER_API_KEY_8,
-    OPENROUTER_API_KEY_9: process.env.OPENROUTER_API_KEY_9,
+    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

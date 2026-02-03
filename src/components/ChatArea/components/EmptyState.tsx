@@ -48,7 +48,7 @@ export const EmptyState = ({ onSuggestionClickAction }: EmptyStateProps) => {
             <Sparkles className='size-8 text-white' />
           </div>
 
-          <div className='-inset-2 absolute rounded-full bg-gradient-to-br from-blue-500/20 to-[#7c3aed]/20 blur-lg dark:to-[#8b5cf6]/20' />
+          <div className='absolute -inset-2 rounded-full bg-gradient-to-br from-blue-500/20 to-[#7c3aed]/20 blur-lg dark:to-[#8b5cf6]/20' />
         </motion.div>
 
         <motion.div

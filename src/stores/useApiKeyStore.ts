@@ -78,7 +78,7 @@ export const useApiKeyStore = create<ApiKeyStore>()(
         // Keep only rate limits from today (remove expired ones)
         for (const [keyIndex, date] of Object.entries(rateLimitedKeys)) {
           if (date === today) {
-            updatedRateLimitedKeys[Number.parseInt(keyIndex)] = date
+            updatedRateLimitedKeys[Number.parseInt(keyIndex, 10)] = date
           }
         }
 
@@ -188,7 +188,7 @@ export const useApiKeyStore = create<ApiKeyStore>()(
           if (state.rateLimitedKeys) {
             for (const [keyIndex, date] of Object.entries(state.rateLimitedKeys)) {
               if (date === today) {
-                updatedRateLimitedKeys[Number.parseInt(keyIndex)] = date
+                updatedRateLimitedKeys[Number.parseInt(keyIndex, 10)] = date
               }
             }
           }

@@ -1,15 +1,14 @@
 import OpenAI from 'openai'
 
-import { env } from '~/env.js'
-import { cycleToNextApiKeyServerSide, getCurrentApiKey } from './api-key-manager'
+import { env } from '~/env'
 
 import type { ModelsIds } from '~/types/models'
 
 // OpenRouter client (for free models only)
-const createOpenRouterClient = (apiKey?: string): OpenAI => {
+const createOpenRouterClient = (): OpenAI => {
   return new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: apiKey || getCurrentApiKey(),
+    apiKey: env.OPENROUTER_API_KEY,
     defaultHeaders: {
       'HTTP-Referer': env.OPENROUTER_SITE_URL,
       'X-Title': env.OPENROUTER_SITE_NAME,
@@ -183,17 +182,6 @@ const makeApiCallWithFallback = async <T>(
       attempts++
 
       console.error(`❌ OpenRouter API error (attempt ${attempts}/${maxRetries}): `, error)
-
-      // Only cycle to next key if it's a failover error and we have more attempts
-      if (isFailoverError(error) && attempts < maxRetries) {
-        // Since we can't distinguish error types, we'll assume any API error
-        // could be a rate limit issue and cycle to the next key
-        console.log('🔄 API error detected (potentially rate limited), cycling to next API key...')
-
-        // Use server-side cycling for now (client-side will be handled differently)
-        cycleToNextApiKeyServerSide()
-        continue
-      }
 
       // If it's not a failover error, don't retry
       if (!isFailoverError(error)) {
