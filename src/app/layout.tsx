@@ -16,6 +16,8 @@ import { TRPCReactProvider } from '~/trpc/react'
 export const metadata: Metadata = {
   title: '22AI',
   description: 'T3 Chat clone for cloneathon. I really like the number 22. ',
+  // Used by Next.js to resolve social Open Graph and Twitter images
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
   icons: [{ rel: 'icon', url: '/images/icons/logo.svg' }],
   manifest: '/manifest.json',
   appleWebApp: {

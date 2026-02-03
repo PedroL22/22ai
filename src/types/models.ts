@@ -1,15 +1,13 @@
 export type ModelsIds =
   // Free models
-  | 'google/gemini-2.0-flash-exp:free'
-  | 'google/gemini-2.0-flash:free'
-  | 'google/gemma-3-27b:free'
+  | 'google/gemma-3-27b-it:free'
+  | 'google/gemma-3-12b-it:free'
   | 'openai/gpt-oss-120b:free'
   | 'meta-llama/llama-3.3-70b-instruct:free'
   | 'meta-llama/llama-3.1-405b-instruct:free'
-  | 'deepseek/deepseek-chat-v3-0324:free'
   | 'deepseek/deepseek-r1-0528:free'
-  | 'qwen/qwen3-coder-480b-instruct:free'
-  | 'qwen/qwen2.5-vl-72b-instruct:free'
+  | 'qwen/qwen3-coder:free'
+  | 'qwen/qwen-2.5-vl-7b-instruct:free'
   // BYOK models
   | 'openai/gpt-5.2:byok'
   | 'openai/gpt-5-mini:byok'
@@ -24,16 +22,14 @@ export type ModelsIds =
 
 export type ModelsNames =
   // Free models
-  | 'Gemini 2.0 Flash Experimental'
-  | 'Gemini 2.0 Flash (Free)'
-  | 'Gemma 3 27B'
   | 'GPT-OSS 120B'
+  | 'Gemma 3 27B'
+  | 'Gemma 3 12B'
   | 'Llama 3.3 70B Instruct'
   | 'Llama 3.1 405B Instruct'
-  | 'DeepSeek V3 0324'
   | 'DeepSeek R1 0528'
-  | 'Qwen3 Coder 480B'
-  | 'Qwen2.5 VL 72B'
+  | 'Qwen3 Coder'
+  | 'Qwen2.5 VL 7B'
   // BYOK models
   | 'GPT 5.2'
   | 'GPT 5 Mini'
@@ -43,10 +39,10 @@ export type ModelsNames =
   | 'Claude 3.7 Sonnet'
   | 'Gemini 3 Pro'
   | 'Gemini 3 Flash'
-  | 'Grok 4'
   | 'DeepSeek V3.2'
+  | 'Grok 4'
 
-export type ModelsDevelopers = 'OpenAI' | 'Anthropic' | 'Google' | 'Meta' | 'Grok' | 'DeepSeek' | 'Qwen'
+export type ModelsDevelopers = 'OpenAI' | 'Anthropic' | 'Google' | 'Meta' | 'DeepSeek' | 'Grok' | 'Qwen'
 
 export type Model = {
   id: ModelsIds
@@ -59,27 +55,19 @@ export type Model = {
 export const MODELS: Model[] = [
   // Free models
   {
-    id: 'google/gemini-2.0-flash-exp:free',
-    name: 'Gemini 2.0 Flash Experimental',
-    developer: 'Google',
-    description:
-      "Google's speed-optimized experimental model featuring rapid response times and a 1 million token context window for high-frequency tasks.",
-    isFree: true,
-  },
-  {
-    id: 'google/gemini-2.0-flash:free',
-    name: 'Gemini 2.0 Flash (Free)',
-    developer: 'Google',
-    description:
-      'A versatile multimodal model with native support for text, images, and video, offering high performance across a variety of general tasks.',
-    isFree: true,
-  },
-  {
-    id: 'google/gemma-3-27b:free',
+    id: 'google/gemma-3-27b-it:free',
     name: 'Gemma 3 27B',
     developer: 'Google',
     description:
       "Google's flagship open-weight multimodal model, delivering strong visual understanding and logical reasoning in an efficient package.",
+    isFree: true,
+  },
+  {
+    id: 'google/gemma-3-12b-it:free',
+    name: 'Gemma 3 12B',
+    developer: 'Google',
+    description:
+      'A balanced open-weight model from Google, offering strong performance in reasoning and instruction-following tasks with efficient resource usage.',
     isFree: true,
   },
   {
@@ -107,14 +95,6 @@ export const MODELS: Model[] = [
     isFree: true,
   },
   {
-    id: 'deepseek/deepseek-chat-v3-0324:free',
-    name: 'DeepSeek V3 0324',
-    developer: 'DeepSeek',
-    description:
-      'A massive 671B Mixture-of-Experts model optimized for extreme efficiency and performance in complex coding, logic, and mathematics.',
-    isFree: true,
-  },
-  {
     id: 'deepseek/deepseek-r1-0528:free',
     name: 'DeepSeek R1 0528',
     developer: 'DeepSeek',
@@ -123,19 +103,19 @@ export const MODELS: Model[] = [
     isFree: true,
   },
   {
-    id: 'qwen/qwen3-coder-480b-instruct:free',
-    name: 'Qwen3 Coder 480B',
+    id: 'qwen/qwen3-coder:free',
+    name: 'Qwen3 Coder',
     developer: 'Qwen',
     description:
       "Alibaba's premier coding model, optimized for repository-level reasoning, function calling, and complex agentic software development.",
     isFree: true,
   },
   {
-    id: 'qwen/qwen2.5-vl-72b-instruct:free',
-    name: 'Qwen2.5 VL 72B',
+    id: 'qwen/qwen-2.5-vl-7b-instruct:free',
+    name: 'Qwen2.5 VL 7B',
     developer: 'Qwen',
     description:
-      'A flagship vision-language model proficient at analyzing documents, charts, and acting as a visual agent for interactive tasks.',
+      'A vision-language model proficient at analyzing documents, charts, and acting as a visual agent for interactive tasks.',
     isFree: true,
   },
   // BYOK models

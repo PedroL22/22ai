@@ -187,7 +187,7 @@ const makeApiCallWithFallback = async <T>(
       const err = error as any
       if (err?.status === 404 || err?.code === 404 || err?.message?.includes('404')) {
         // Extract model name from error message (pattern: provider/model-name:variant)
-        // Example: "404 No endpoints found for google/gemini-2.0-flash-exp:free."
+        // Example: "404 No endpoints found for google/gemini-2.0-flash-001:free."
         const modelMatch = err?.message?.match(/([a-z0-9-]+\/[a-z0-9.-]+(?::[a-z]+)?)/i)
         const modelName = modelMatch ? modelMatch[1] : 'the requested model'
         return {

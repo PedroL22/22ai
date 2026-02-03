@@ -52,7 +52,16 @@ export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) =>
   }, {})
 
   // List of developers in desired order (always visible)
-  const developerOrder: ModelsDevelopers[] = ['OpenAI', 'Anthropic', 'Google', 'Meta', 'Grok', 'DeepSeek', 'Qwen']
+  const developerOrder: ModelsDevelopers[] = [
+    'OpenAI',
+    'Anthropic',
+    'Google',
+    'Meta',
+    'DeepSeek',
+    'Grok',
+    'Moonshot',
+    'Qwen',
+  ]
 
   const getBlockReason = (model: (typeof MODELS)[number]) => {
     if (model.developer === 'OpenAI') return 'Add your OpenAI API key in Settings to use this model.'
@@ -104,7 +113,7 @@ export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) =>
       >
         <div className='flex h-[495px] w-full'>
           {/* Developers list */}
-          <div className='flex w-40 shrink-0 flex-col border-muted/30 border-r bg-gradient-to-b from-muted/5 to-muted/20 py-3'>
+          <div className='flex w-40 shrink-0 flex-col border-muted/30 border-r bg-linear-to-b from-muted/5 to-muted/20 py-3'>
             <div className='px-4 pb-3'>
               <div className='font-semibold text-foreground text-sm'>AI Providers</div>
               <p className='text-muted-foreground text-xs'>Choose your model provider</p>

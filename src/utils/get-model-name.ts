@@ -3,16 +3,14 @@ import type { ModelsIds, ModelsNames } from '~/types/models'
 export const getModelName = (modelId: ModelsIds): ModelsNames => {
   const modelNames: Record<ModelsIds, ModelsNames> = {
     // Free models
-    'google/gemini-2.0-flash-exp:free': 'Gemini 2.0 Flash Experimental',
-    'google/gemini-2.0-flash:free': 'Gemini 2.0 Flash (Free)',
-    'google/gemma-3-27b:free': 'Gemma 3 27B',
+    'google/gemma-3-27b-it:free': 'Gemma 3 27B',
+    'google/gemma-3-12b-it:free': 'Gemma 3 12B',
     'openai/gpt-oss-120b:free': 'GPT-OSS 120B',
     'meta-llama/llama-3.3-70b-instruct:free': 'Llama 3.3 70B Instruct',
     'meta-llama/llama-3.1-405b-instruct:free': 'Llama 3.1 405B Instruct',
-    'deepseek/deepseek-chat-v3-0324:free': 'DeepSeek V3 0324',
     'deepseek/deepseek-r1-0528:free': 'DeepSeek R1 0528',
-    'qwen/qwen3-coder-480b-instruct:free': 'Qwen3 Coder 480B',
-    'qwen/qwen2.5-vl-72b-instruct:free': 'Qwen2.5 VL 72B',
+    'qwen/qwen3-coder:free': 'Qwen3 Coder',
+    'qwen/qwen-2.5-vl-7b-instruct:free': 'Qwen2.5 VL 7B',
     // BYOK models
     'openai/gpt-5.2:byok': 'GPT 5.2',
     'openai/gpt-5-mini:byok': 'GPT 5 Mini',
