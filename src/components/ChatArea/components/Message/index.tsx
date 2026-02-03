@@ -56,6 +56,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
   const [isCopied, setIsCopied] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content)
+  const messageModelId = message.modelId as ModelsIds | null
 
   const markdownOptions = useMemo(
     () => ({
@@ -226,7 +227,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
         <div className={messageVariants({ variant: message.isError ? 'error' : message.role })}>
           <div
             data-role={message.role}
-            className={cn('max-w-none whitespace-pre-wrap break-words data-[role=user]:text-white', {
+            className={cn('wrap-break-word max-w-none whitespace-pre-wrap data-[role=user]:text-white', {
               'text-destructive': message.isError,
             })}
           >
@@ -260,6 +261,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
                   <RefreshCcw className='size-4' />
                 </Button>
               }
+              selectedModelId={messageModelId}
               onModelSelect={(modelId) => handleRetry(modelId)}
             />
 
@@ -287,6 +289,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
                     <GitBranch className='size-4' />
                   </Button>
                 }
+                selectedModelId={messageModelId}
                 onModelSelect={(modelId) => handleBranch(modelId)}
               />
             )}

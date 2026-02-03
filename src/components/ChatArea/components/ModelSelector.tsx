@@ -18,9 +18,10 @@ import { MODELS, type ModelsDevelopers, type ModelsIds } from '~/types/models'
 type ModelSelectorProps = {
   trigger?: ReactNode
   onModelSelect?: (modelId: ModelsIds) => void
+  selectedModelId?: ModelsIds | null
 }
 
-export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) => {
+export const ModelSelector = ({ trigger, onModelSelect, selectedModelId }: ModelSelectorProps) => {
   const [activeDeveloper, setActiveDeveloper] = useState<ModelsDevelopers | null>(null)
   const geminiApiKey = useApiKeyStore((s) => s.geminiApiKey)
   const openaiApiKey = useApiKeyStore((s) => s.openaiApiKey)
@@ -37,10 +38,11 @@ export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) =>
   }
 
   const [open, setOpen] = useState(false)
-  const selectedModelId = useChatStore((state) => state.selectedModelId)
+  const selectedModelIdFromStore = useChatStore((state) => state.selectedModelId)
   const setSelectedModelId = useChatStore((state) => state.setSelectedModelId)
 
-  const selectedModel = MODELS.find((model) => model.id === selectedModelId)
+  const resolvedSelectedModelId = selectedModelId ?? selectedModelIdFromStore
+  const selectedModel = MODELS.find((model) => model.id === resolvedSelectedModelId)
 
   // Group models by developer
   const groupedModels = MODELS.reduce<Record<string, typeof MODELS>>((acc, model) => {
@@ -90,7 +92,9 @@ export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) =>
           >
             <div className='flex items-center gap-2'>
               {selectedModel ? getDeveloperIcon(selectedModel.developer) : <Sparkles className='size-3' />}
-              <span className='truncate'>{selectedModel ? selectedModel.name : getModelName(selectedModelId)}</span>
+              <span className='truncate'>
+                {selectedModel ? selectedModel.name : getModelName(resolvedSelectedModelId)}
+              </span>
               <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
             </div>
           </Button>
@@ -181,7 +185,7 @@ export const ModelSelector = ({ trigger, onModelSelect }: ModelSelectorProps) =>
                     <div className='h-full space-y-2 overflow-y-auto'>
                       {groupedModels[activeDeveloper].map((model) => {
                         const blocked = isModelBlocked(model)
-                        const isSelected = selectedModelId === model.id
+                        const isSelected = resolvedSelectedModelId === model.id
 
                         return (
                           <Tooltip key={model.id}>
