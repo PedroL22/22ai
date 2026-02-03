@@ -209,7 +209,7 @@ export const ChatMenu = ({
 
   if (isRenaming) {
     return (
-      <div className='flex w-full items-center gap-2 rounded-lg bg-accent px-3 py-4 dark:bg-accent/35'>
+      <div className='flex w-full items-center gap-2 rounded-lg bg-accent px-3 py-4 hover:bg-red-500 dark:bg-accent/35'>
         <input
           ref={inputRef}
           type='text'
@@ -244,7 +244,7 @@ export const ChatMenu = ({
           type='button'
           title={chatTitle || 'Untitled'}
           aria-label={`Chat: ${chatTitle || 'Untitled'}`}
-          className='flex flex-1 cursor-pointer items-center rounded-lg hover:bg-accent'
+          className='flex flex-1 cursor-pointer items-center'
           onClick={handleChatClick}
         >
           <ContextMenu>
