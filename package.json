@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare": "husky",
     "build": "next build",
     "check": "biome check .",
     "check:unsafe": "biome check --write --unsafe .",
@@ -17,7 +16,8 @@
     "postinstall": "prisma generate --schema=src/db/prisma/schema.prisma",
     "preview": "next build && next start",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

@@ -1,7 +1,7 @@
 ---
 alwaysApply: false
-description: Enforces React 19, Tailwind v4, and Base UI standards when creating or editing UI components.
-globs: **/*.tsx
+description: Coding standards and prompt for converting designs into React 19 components using Tailwind CSS v4, Base UI, and Tailwind Variants.
+globs: "**/*.tsx"
 ---
 
 # Design to React Component Conversion
@@ -162,7 +162,7 @@ className={twMerge('base-classes', className)}
 
 // States with data-attributes
 data-disabled={disabled ? '' : undefined}
-className="data-[disabled]:opacity-50 data-[selected]:bg-primary"
+className="data-disabled:opacity-50 data-selected:bg-primary"
 
 // Focus visible
 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
