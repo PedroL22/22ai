@@ -1,6 +1,5 @@
 import { ClerkProvider } from '@clerk/tanstack-react-start'
 import { Analytics } from '@vercel/analytics/react'
-import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRootRoute, Outlet, HeadContent, Scripts } from '@tanstack/react-router'
 
