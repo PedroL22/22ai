@@ -83,9 +83,23 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$chatId' | '/settings' | '/sign-in' | '/api/chat/stream' | '/api/trpc/$' | '/api/webhooks/clerk'
+  fullPaths:
+    | '/'
+    | '/$chatId'
+    | '/settings'
+    | '/sign-in'
+    | '/api/chat/stream'
+    | '/api/trpc/$'
+    | '/api/webhooks/clerk'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$chatId' | '/settings' | '/sign-in' | '/api/chat/stream' | '/api/trpc/$' | '/api/webhooks/clerk'
+  to:
+    | '/'
+    | '/$chatId'
+    | '/settings'
+    | '/sign-in'
+    | '/api/chat/stream'
+    | '/api/trpc/$'
+    | '/api/webhooks/clerk'
   id:
     | '__root__'
     | '/'
@@ -170,7 +184,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
 }
-export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'
