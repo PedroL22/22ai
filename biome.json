@@ -21,6 +21,8 @@
       "!**/node_modules",
       "!**/dist",
       "!**/out",
+      "!**/.output",
+      "!**/.tanstack",
       "!**/public/**/*.js",
       "!**/generated",
       "!**/.turbo",
