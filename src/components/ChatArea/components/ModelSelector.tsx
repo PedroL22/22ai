@@ -1,4 +1,4 @@
-'use client'
+''
 import { type ReactNode, useEffect, useState } from 'react'
 
 import { Check, ChevronsUpDown, Info, Sparkles } from 'lucide-react'

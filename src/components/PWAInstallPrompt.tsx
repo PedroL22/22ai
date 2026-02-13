@@ -1,4 +1,4 @@
-'use client'
+''
 
 import { Check, Download, Info, Smartphone } from 'lucide-react'
 import { useEffect, useState } from 'react'
