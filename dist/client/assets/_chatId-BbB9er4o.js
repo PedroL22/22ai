@@ -1,0 +1,1 @@
+import{R as o,j as a}from"./main-Rbm0kVwC.js";import{C as r}from"./index-BuuwvR1v.js";import"./useApiKeyStore-CAcJUKwo.js";function n(){const{chatId:t}=o.useParams();return a.jsx(r,{chatId:t})}export{n as component};

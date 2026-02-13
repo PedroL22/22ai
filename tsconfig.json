@@ -23,5 +23,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.cjs", "**/*.js", ".react-router/types/**/*.ts"],
-  "exclude": ["node_modules", "public"]
+  "exclude": ["node_modules", "public", "dist"]
 }
