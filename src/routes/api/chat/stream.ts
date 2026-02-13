@@ -2,8 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 
 import { env } from '~/env'
+import { MAX_API_KEY_LENGTH, MAX_MESSAGES_COUNT } from '~/lib/constants'
 import { createGeminiBYOKStreamParser } from '~/lib/gemini-byok-parser'
 import { createChatCompletionStream } from '~/lib/openai'
+import { chatMessageSchema } from '~/lib/validation'
 import { tryCatch } from '~/utils/try-catch'
 
 import type { ModelsIds } from '~/types/models'
@@ -11,18 +13,13 @@ import { MODELS } from '~/types/models'
 
 const MODEL_IDS = MODELS.map((model) => model.id) as [ModelsIds, ...ModelsIds[]]
 
-const chatMessageSchema = z.object({
-  role: z.enum(['system', 'user', 'assistant']),
-  content: z.string(),
-})
-
 const streamRequestSchema = z.object({
-  messages: z.array(chatMessageSchema),
+  messages: z.array(chatMessageSchema).max(MAX_MESSAGES_COUNT, `Messages array exceeds ${MAX_MESSAGES_COUNT} items`),
   modelId: z
     .enum(MODEL_IDS)
     .optional()
     .default(env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
-  apiKey: z.string().optional(),
+  apiKey: z.string().trim().max(MAX_API_KEY_LENGTH).optional(),
 })
 
 export const Route = createFileRoute('/api/chat/stream')({

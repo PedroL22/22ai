@@ -1,6 +1,15 @@
 import { z } from 'zod'
 
 import { createChatCompletion } from '~/lib/openai'
+import { MAX_CHAT_ID_LENGTH, MAX_MESSAGE_LENGTH, MAX_TITLE_LENGTH } from '~/lib/constants'
+import {
+  NotFoundError,
+  UnauthorizedError,
+  chatIdSchema,
+  chatMessageSchema,
+  titleSchema,
+  verifyChatOwnership,
+} from '~/lib/validation'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '~/server/api/trpc'
 import { tryCatch } from '~/utils/try-catch'
 
@@ -10,11 +19,6 @@ import type { ModelsIds } from '~/types/models'
 import { MODELS } from '~/types/models'
 
 const MODEL_IDS = MODELS.map((model) => model.id) as [ModelsIds, ...ModelsIds[]]
-
-const chatMessageSchema = z.object({
-  role: z.enum(['system', 'user', 'assistant']),
-  content: z.string(),
-})
 
 export const chatRouter = createTRPCRouter({
   sendMessage: publicProcedure
@@ -45,46 +49,48 @@ export const chatRouter = createTRPCRouter({
       }
     }),
 
-  generateChatTitle: publicProcedure.input(z.object({ firstMessage: z.string() })).mutation(async ({ input }) => {
-    console.log('🎯 tRPC: Starting title generation for message: ', input.firstMessage)
+  generateChatTitle: publicProcedure
+    .input(z.object({ firstMessage: z.string().trim().max(MAX_MESSAGE_LENGTH) }))
+    .mutation(async ({ input }) => {
+      console.log('🎯 tRPC: Starting title generation for message: ', input.firstMessage)
 
-    const { data, error } = await tryCatch(
-      createChatCompletion(
-        [
-          {
-            role: 'system',
-            content:
-              "You are a helpful assistant that generates concise, descriptive chat titles (3-6 words) based on the user's first message. Respond only with the title, no additional text or punctuation.",
-          },
-          {
-            role: 'user',
-            content: `Generate a concise title for a chat that starts with this message: "${input.firstMessage}"`,
-          },
-        ],
-        env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds
+      const { data, error } = await tryCatch(
+        createChatCompletion(
+          [
+            {
+              role: 'system',
+              content:
+                "You are a helpful assistant that generates concise, descriptive chat titles (3-6 words) based on the user's first message. Respond only with the title, no additional text or punctuation.",
+            },
+            {
+              role: 'user',
+              content: `Generate a concise title for a chat that starts with this message: "${input.firstMessage}"`,
+            },
+          ],
+          env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds
+        )
       )
-    )
 
-    if (error) {
-      console.error('❌ Error generating chat title: ', error)
+      if (error) {
+        console.error('❌ Error generating chat title: ', error)
+
+        return {
+          success: false,
+          title: 'New chat',
+        }
+      }
 
       return {
-        success: false,
-        title: 'New chat',
+        success: true,
+        title: data.message?.trim().replace(/"/g, '') || 'New chat',
       }
-    }
-
-    return {
-      success: true,
-      title: data.message?.trim().replace(/"/g, '') || 'New chat',
-    }
-  }),
+    }),
 
   createChat: protectedProcedure
     .input(
       z.object({
-        title: z.string().optional(),
-        firstMessage: z.string(),
+        title: z.string().trim().max(MAX_TITLE_LENGTH).optional(),
+        firstMessage: z.string().trim().max(MAX_MESSAGE_LENGTH, `Message exceeds ${MAX_MESSAGE_LENGTH} characters`),
         modelId: z
           .enum(MODEL_IDS)
           .optional()
@@ -92,12 +98,6 @@ export const chatRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const ensureUserExists = await ctx.db.user.findUnique({ where: { id: ctx.auth.userId! } })
-
-      if (!ensureUserExists) {
-        throw new Error('User not found.')
-      }
-
       const chat = await ctx.db.chat.create({
         data: {
           title: input.title || `Chat ${new Date().toLocaleDateString('en-US')}`,
@@ -145,13 +145,10 @@ export const chatRouter = createTRPCRouter({
     }),
 
   renameChat: protectedProcedure
-    .input(z.object({ chatId: z.string(), newTitle: z.string() }))
+    .input(z.object({ chatId: chatIdSchema, newTitle: titleSchema }))
     .mutation(async ({ ctx, input }) => {
-      const chat = await ctx.db.chat.findUnique({ where: { id: input.chatId } })
-
-      if (!chat) {
-        throw new Error('Chat not found.')
-      }
+      const chat = await verifyChatOwnership(ctx.db, input.chatId, ctx.auth.userId!)
+      if (!chat) throw new UnauthorizedError()
 
       await ctx.db.chat.update({
         where: { id: input.chatId },
@@ -165,12 +162,9 @@ export const chatRouter = createTRPCRouter({
       }
     }),
 
-  deleteChat: protectedProcedure.input(z.object({ chatId: z.string() })).mutation(async ({ ctx, input }) => {
-    const chat = await ctx.db.chat.findUnique({ where: { id: input.chatId } })
-
-    if (!chat) {
-      throw new Error('Chat not found.')
-    }
+  deleteChat: protectedProcedure.input(z.object({ chatId: chatIdSchema })).mutation(async ({ ctx, input }) => {
+    const chat = await verifyChatOwnership(ctx.db, input.chatId, ctx.auth.userId!)
+    if (!chat) throw new UnauthorizedError()
 
     await ctx.db.chat.delete({ where: { id: input.chatId } })
 
@@ -180,13 +174,10 @@ export const chatRouter = createTRPCRouter({
   }),
 
   pinChat: protectedProcedure
-    .input(z.object({ chatId: z.string(), isPinned: z.boolean() }))
+    .input(z.object({ chatId: chatIdSchema, isPinned: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
-      const chat = await ctx.db.chat.findUnique({ where: { id: input.chatId } })
-
-      if (!chat) {
-        throw new Error('Chat not found.')
-      }
+      const chat = await verifyChatOwnership(ctx.db, input.chatId, ctx.auth.userId!)
+      if (!chat) throw new UnauthorizedError()
 
       await ctx.db.chat.update({
         where: { id: input.chatId },
@@ -201,13 +192,10 @@ export const chatRouter = createTRPCRouter({
     }),
 
   shareChat: protectedProcedure
-    .input(z.object({ chatId: z.string(), isShared: z.boolean() }))
+    .input(z.object({ chatId: chatIdSchema, isShared: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
-      const chat = await ctx.db.chat.findUnique({ where: { id: input.chatId } })
-
-      if (!chat) {
-        throw new Error('Chat not found.')
-      }
+      const chat = await verifyChatOwnership(ctx.db, input.chatId, ctx.auth.userId!)
+      if (!chat) throw new UnauthorizedError()
 
       await ctx.db.chat.update({
         where: { id: input.chatId },
@@ -244,12 +232,9 @@ export const chatRouter = createTRPCRouter({
     }))
   }),
 
-  getChatMessages: protectedProcedure.input(z.object({ chatId: z.string() })).query(async ({ ctx, input }) => {
-    const chat = await ctx.db.chat.findUnique({ where: { id: input.chatId } })
-
-    if (!chat) {
-      throw new Error('Chat not found.')
-    }
+  getChatMessages: protectedProcedure.input(z.object({ chatId: chatIdSchema })).query(async ({ ctx, input }) => {
+    const chat = await verifyChatOwnership(ctx.db, input.chatId, ctx.auth.userId!)
+    if (!chat) throw new UnauthorizedError()
 
     const messages = await ctx.db.message.findMany({
       where: { chatId: input.chatId },
@@ -267,8 +252,8 @@ export const chatRouter = createTRPCRouter({
   sendMessageToChat: protectedProcedure
     .input(
       z.object({
-        chatId: z.string(),
-        message: z.string(),
+        chatId: chatIdSchema,
+        message: z.string().trim().max(MAX_MESSAGE_LENGTH, `Message exceeds ${MAX_MESSAGE_LENGTH} characters`),
         modelId: z
           .enum(MODEL_IDS)
           .optional()
@@ -276,19 +261,9 @@ export const chatRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const ensureUserExists = await ctx.db.user.findUnique({ where: { id: ctx.auth.userId! } })
+      const chat = await verifyChatOwnership(ctx.db, input.chatId, ctx.auth.userId!)
+      if (!chat) throw new UnauthorizedError()
 
-      if (!ensureUserExists) {
-        throw new Error('User not found.')
-      }
-
-      const chat = await ctx.db.chat.findUnique({ where: { id: input.chatId } })
-
-      if (!chat) {
-        throw new Error('Chat not found.')
-      }
-
-      // Save user message to database
       const userMessage = await ctx.db.message.create({
         data: {
           role: 'user',
@@ -298,7 +273,6 @@ export const chatRouter = createTRPCRouter({
         },
       })
 
-      // Update chat's updatedAt timestamp
       await ctx.db.chat.update({
         where: { id: input.chatId },
         data: { updatedAt: new Date() },
@@ -316,16 +290,16 @@ export const chatRouter = createTRPCRouter({
       z.object({
         chats: z.array(
           z.object({
-            id: z.string(),
-            title: z.string(),
+            id: z.string().trim().max(MAX_CHAT_ID_LENGTH),
+            title: z.string().trim().max(MAX_TITLE_LENGTH),
             createdAt: z.date(),
             updatedAt: z.date(),
             messages: z.array(
               z.object({
-                id: z.string(),
+                id: z.string().trim().max(MAX_CHAT_ID_LENGTH),
                 role: z.enum(['user', 'assistant']),
-                content: z.string(),
-                modelId: z.string().nullable(),
+                content: z.string().trim().max(MAX_MESSAGE_LENGTH),
+                modelId: z.string().trim().nullable(),
                 createdAt: z.date(),
               })
             ),
@@ -334,23 +308,15 @@ export const chatRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const ensureUserExists = await ctx.db.user.findUnique({ where: { id: ctx.auth.userId! } })
-
-      if (!ensureUserExists) {
-        throw new Error('User not found.')
-      }
-
       const syncedChats = []
 
       for (const localChat of input.chats) {
-        // Check if chat already exists in database
         const existingChat = await ctx.db.chat.findUnique({
           where: { id: localChat.id },
         })
 
         let chat: { id: string; title: string | null; createdAt: Date; updatedAt: Date; userId: string }
         if (!existingChat) {
-          // Create new chat in database
           chat = await ctx.db.chat.create({
             data: {
               id: localChat.id,
@@ -361,10 +327,12 @@ export const chatRouter = createTRPCRouter({
             },
           })
         } else {
+          if (existingChat.userId !== ctx.auth.userId!) {
+            continue
+          }
           chat = existingChat
         }
 
-        // Sync messages for this chat
         for (const localMessage of localChat.messages) {
           const existingMessage = await ctx.db.message.findUnique({
             where: { id: localMessage.id },
@@ -454,8 +422,8 @@ export const chatRouter = createTRPCRouter({
     .input(
       z.object({
         chat: z.object({
-          id: z.string(),
-          title: z.string(),
+          id: z.string().trim().max(MAX_CHAT_ID_LENGTH),
+          title: z.string().trim().max(MAX_TITLE_LENGTH),
           createdAt: z.date(),
           updatedAt: z.date(),
         }),
@@ -463,6 +431,14 @@ export const chatRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        const existingChat = await ctx.db.chat.findUnique({
+          where: { id: input.chat.id },
+        })
+
+        if (existingChat && existingChat.userId !== ctx.auth.userId!) {
+          throw new UnauthorizedError()
+        }
+
         const chat = await ctx.db.chat.upsert({
           where: { id: input.chat.id },
           update: {
@@ -489,18 +465,21 @@ export const chatRouter = createTRPCRouter({
     .input(
       z.object({
         message: z.object({
-          id: z.string(),
+          id: z.string().trim().max(MAX_CHAT_ID_LENGTH),
           role: z.enum(['user', 'assistant']),
-          content: z.string(),
+          content: z.string().trim().max(MAX_MESSAGE_LENGTH),
           isError: z.boolean(),
-          modelId: z.string().nullable(),
+          modelId: z.string().trim().nullable(),
           createdAt: z.date(),
-          chatId: z.string(),
+          chatId: z.string().trim().max(MAX_CHAT_ID_LENGTH),
         }),
       })
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        const chat = await verifyChatOwnership(ctx.db, input.message.chatId, ctx.auth.userId!)
+        if (!chat) throw new UnauthorizedError()
+
         const message = await ctx.db.message.upsert({
           where: { id: input.message.id },
           update: {
@@ -525,18 +504,18 @@ export const chatRouter = createTRPCRouter({
       }
     }),
 
-  getSharedChat: publicProcedure.input(z.object({ chatId: z.string() })).query(async ({ ctx, input }) => {
+  getSharedChat: publicProcedure.input(z.object({ chatId: chatIdSchema })).query(async ({ ctx, input }) => {
     const chat = await ctx.db.chat.findUnique({
       where: { id: input.chatId },
       include: { user: { select: { id: true, email: true } } },
     })
 
     if (!chat) {
-      throw new Error('Chat not found.')
+      throw new NotFoundError('Chat not found.')
     }
 
     if (!chat.isShared) {
-      throw new Error('Chat is not shared.')
+      throw new UnauthorizedError('Chat is not shared.')
     }
 
     const { clerkClient } = await import('@clerk/tanstack-react-start/server')
@@ -564,17 +543,17 @@ export const chatRouter = createTRPCRouter({
     }
   }),
 
-  getSharedChatMessages: publicProcedure.input(z.object({ chatId: z.string() })).query(async ({ ctx, input }) => {
+  getSharedChatMessages: publicProcedure.input(z.object({ chatId: chatIdSchema })).query(async ({ ctx, input }) => {
     const chat = await ctx.db.chat.findUnique({
       where: { id: input.chatId },
     })
 
     if (!chat) {
-      throw new Error('Chat not found.')
+      throw new NotFoundError('Chat not found.')
     }
 
     if (!chat.isShared) {
-      throw new Error('Chat is not shared.')
+      throw new UnauthorizedError('Chat is not shared.')
     }
 
     const messages = await ctx.db.message.findMany({
@@ -594,14 +573,13 @@ export const chatRouter = createTRPCRouter({
     }))
   }),
 
-  // Check if current user is the owner of a chat
-  isOwnerOfChat: publicProcedure.input(z.object({ chatId: z.string() })).query(async ({ ctx, input }) => {
+  isOwnerOfChat: publicProcedure.input(z.object({ chatId: chatIdSchema })).query(async ({ ctx, input }) => {
     const chat = await ctx.db.chat.findUnique({
       where: { id: input.chatId },
     })
 
     if (!chat) {
-      throw new Error('Chat not found.')
+      throw new NotFoundError('Chat not found.')
     }
 
     if (!ctx.auth.userId) {
@@ -614,52 +592,34 @@ export const chatRouter = createTRPCRouter({
   deleteMessagesFromIndex: protectedProcedure
     .input(
       z.object({
-        chatId: z.string(),
-        messageIndex: z.number(),
+        chatId: chatIdSchema,
+        messageIndex: z.number().int().nonnegative(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        // First check if user owns the chat
-        const chat = await ctx.db.chat.findUnique({
-          where: { id: input.chatId },
-        })
+      const chat = await verifyChatOwnership(ctx.db, input.chatId, ctx.auth.userId!)
+      if (!chat) throw new UnauthorizedError()
 
-        if (!chat) {
-          throw new Error('Chat not found.')
-        }
+      const messages = await ctx.db.message.findMany({
+        where: { chatId: input.chatId },
+        orderBy: { createdAt: 'asc' },
+      })
 
-        if (chat.userId !== ctx.auth.userId!) {
-          throw new Error('You do not have permission to delete messages from this chat.')
-        }
+      const messagesToDelete = messages.slice(input.messageIndex)
 
-        // Get all messages for this chat ordered by creation time
-        const messages = await ctx.db.message.findMany({
-          where: { chatId: input.chatId },
-          orderBy: { createdAt: 'asc' },
-        })
-
-        // Find messages to delete (from messageIndex onwards)
-        const messagesToDelete = messages.slice(input.messageIndex)
-
-        // Delete messages from database
-        if (messagesToDelete.length > 0) {
-          await ctx.db.message.deleteMany({
-            where: {
-              id: {
-                in: messagesToDelete.map((msg) => msg.id),
-              },
+      if (messagesToDelete.length > 0) {
+        await ctx.db.message.deleteMany({
+          where: {
+            id: {
+              in: messagesToDelete.map((msg) => msg.id),
             },
-          })
-        }
+          },
+        })
+      }
 
-        return {
-          success: true,
-          deletedCount: messagesToDelete.length,
-        }
-      } catch (error) {
-        console.error('❌ Error deleting messages from database: ', error)
-        throw new Error('❌ Failed to delete messages from database.')
+      return {
+        success: true,
+        deletedCount: messagesToDelete.length,
       }
     }),
 })

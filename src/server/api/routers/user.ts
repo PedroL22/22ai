@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { MAX_LANGUAGE_LENGTH } from '~/lib/constants'
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
 
 export const userRouter = createTRPCRouter({
@@ -25,7 +26,7 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         syncWithDb: z.boolean().optional(),
-        language: z.string().optional(),
+        language: z.string().trim().max(MAX_LANGUAGE_LENGTH, 'Invalid language code').optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
