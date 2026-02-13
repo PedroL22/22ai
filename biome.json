@@ -25,6 +25,7 @@
       "!**/.tanstack",
       "!**/public/**/*.js",
       "!**/generated",
+      "!**/*.gen.ts",
       "!**/.turbo",
       "!**/.env"
     ]
