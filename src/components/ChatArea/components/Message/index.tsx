@@ -97,37 +97,37 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
         },
         table: MarkdownTable,
         thead: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <thead className='bg-muted/50' {...props}>
+          <thead className='bg-muted/50 leading-relaxed' {...props}>
             {children}
           </thead>
         ),
         th: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <th className='border-b px-4 text-left font-semibold' {...props}>
+          <th className='border-b p-4 text-left font-semibold leading-relaxed' {...props}>
             {children}
           </th>
         ),
         td: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <td className='border-b px-4' {...props}>
+          <td className='border-b p-4 leading-relaxed' {...props}>
             {children}
           </td>
         ),
         blockquote: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <blockquote className='border-primary border-l-4 bg-muted/50 pr-4 pl-4 italic' {...props}>
+          <blockquote className='border-primary border-l-4 bg-muted/50 p-4 italic leading-relaxed' {...props}>
             {children}
           </blockquote>
         ),
         h1: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <h1 className='mt-4 mb-1 font-bold text-2xl' {...props}>
+          <h1 className='my-6 font-bold text-2xl' {...props}>
             {children}
           </h1>
         ),
         h2: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <h2 className='mt-3 mb-1 font-semibold text-xl' {...props}>
+          <h2 className='my-5 font-semibold text-xl' {...props}>
             {children}
           </h2>
         ),
         h3: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <h3 className='mt-1 font-semibold text-lg' {...props}>
+          <h3 className='my-4 font-semibold text-lg' {...props}>
             {children}
           </h3>
         ),
@@ -137,30 +137,36 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
           </h4>
         ),
         ul: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <ul className='ml-4 list-disc' {...props}>
+          <ul className='my-2 ml-4 list-disc leading-relaxed' {...props}>
             {children}
           </ul>
         ),
         ol: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <ol className='ml-4 list-decimal' {...props}>
+          <ol className='my-2 ml-4 list-decimal leading-relaxed' {...props}>
             {children}
           </ol>
         ),
         li: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <li className='leading-relaxed' {...props}>
+          <li className='py-2 leading-relaxed marker:text-muted-foreground' {...props}>
             {children}
           </li>
         ),
         p: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <p className='leading-relaxed' {...props}>
+          <p className='my-3 leading-relaxed first:mt-0 last:mb-0' {...props}>
             {children}
           </p>
         ),
-        hr: ({ ...props }: { [key: string]: any }) => <hr className='border-border' {...props} />,
+        hr: ({ ...props }: { [key: string]: any }) => <hr className='border-border leading-relaxed' {...props} />,
         input: ({ type, checked, ...props }: { type?: string; checked?: boolean; [key: string]: any }) => {
           if (type === 'checkbox') {
             return (
-              <input type='checkbox' checked={checked} disabled className='mr-2 cursor-default text-sm' {...props} />
+              <input
+                type='checkbox'
+                checked={checked}
+                disabled
+                className='mr-2 cursor-default text-sm leading-relaxed'
+                {...props}
+              />
             )
           }
           return <input type={type} {...props} />
@@ -227,7 +233,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
         <div className={messageVariants({ variant: message.isError ? 'error' : message.role })}>
           <div
             data-role={message.role}
-            className={cn('wrap-break-word max-w-none whitespace-pre-wrap data-[role=user]:text-white', {
+            className={cn('wrap-break-word max-w-none data-[role=user]:text-white', {
               'text-destructive': message.isError,
             })}
           >
@@ -238,7 +244,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
             data-role={message.role}
             data-is-error={message.isError}
             className={cn(
-              'absolute flex flex-row-reverse items-center self-start whitespace-nowrap text-muted-foreground transition-all ease-in sm:gap-1',
+              'absolute flex flex-row-reverse items-center self-start text-muted-foreground transition-all ease-in sm:gap-1',
               '-bottom-9',
               'data-[is-error=true]:-bottom-11 sm:data-[is-error=true]:-bottom-10',
               'data-[role=user]:-bottom-11 sm:data-[role=user]:-bottom-10',
@@ -248,7 +254,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
               isStreaming ? 'pointer-events-none opacity-0' : 'opacity-0 group-hover:opacity-100'
             )}
           >
-            <p className='shrink-0 whitespace-nowrap px-1 text-xs sm:px-3'>{`${message.modelId ? `${getModelName(message.modelId as ModelsIds)} ` : ''}${formatMessageDateForChatHistory(message.createdAt.toISOString())}`}</p>
+            <p className='shrink-0 px-1 text-xs sm:px-3'>{`${message.modelId ? `${getModelName(message.modelId as ModelsIds)} ` : ''}${formatMessageDateForChatHistory(message.createdAt.toISOString())}`}</p>
 
             <ModelSelector
               trigger={

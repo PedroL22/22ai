@@ -27,7 +27,7 @@ export const CodeBlock = ({ className, children, ...props }: CodeBlockProps) => 
   }
 
   return (
-    <div className='relative my-4 overflow-hidden rounded-sm bg-muted/50'>
+    <div className='relative my-8 overflow-hidden rounded-sm bg-muted/50'>
       {/* Code header with language and copy button */}
       <div className='flex items-center justify-between bg-zinc-300 px-4 py-1 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200'>
         <span className='font-medium font-mono text-sm'>{language || 'code'}</span>
