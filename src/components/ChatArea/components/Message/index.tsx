@@ -147,7 +147,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
           </ol>
         ),
         li: ({ children, ...props }: { children?: ReactNode; [key: string]: any }) => (
-          <li className='py-2 leading-relaxed marker:text-muted-foreground' {...props}>
+          <li className='py-2 leading-relaxed marker:font-bold marker:text-accent-foreground marker:text-sm' {...props}>
             {children}
           </li>
         ),
@@ -156,7 +156,7 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
             {children}
           </p>
         ),
-        hr: ({ ...props }: { [key: string]: any }) => <hr className='border-border leading-relaxed' {...props} />,
+        hr: ({ ...props }: { [key: string]: any }) => <hr className='my-4 border-border leading-relaxed' {...props} />,
         input: ({ type, checked, ...props }: { type?: string; checked?: boolean; [key: string]: any }) => {
           if (type === 'checkbox') {
             return (
