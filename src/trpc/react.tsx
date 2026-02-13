@@ -1,5 +1,3 @@
-'use client'
-
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchStreamLink, loggerLink } from '@trpc/client'
 import { createTRPCReact } from '@trpc/react-query'
@@ -13,10 +11,8 @@ import { createQueryClient } from './query-client'
 let clientQueryClientSingleton: QueryClient | undefined
 const getQueryClient = () => {
   if (typeof window === 'undefined') {
-    // Server: always make a new query client
     return createQueryClient()
   }
-  // Browser: use singleton pattern to keep the same query client
   clientQueryClientSingleton ??= createQueryClient()
 
   return clientQueryClientSingleton
@@ -24,18 +20,8 @@ const getQueryClient = () => {
 
 export const api = createTRPCReact<AppRouter>()
 
-/**
- * Inference helper for inputs.
- *
- * @example type HelloInput = RouterInputs['example']['hello']
- */
 export type RouterInputs = inferRouterInputs<AppRouter>
 
-/**
- * Inference helper for outputs.
- *
- * @example type HelloOutput = RouterOutputs['example']['hello']
- */
 export type RouterOutputs = inferRouterOutputs<AppRouter>
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
@@ -46,14 +32,13 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       links: [
         loggerLink({
           enabled: (op) => {
-            // Don't log UNAUTHORIZED errors to reduce noise in development
             if (op.direction === 'down' && op.result instanceof Error) {
               const error = op.result as any
               if (error.data?.code === 'UNAUTHORIZED') {
                 return false
               }
             }
-            return process.env.NODE_ENV === 'development' || (op.direction === 'down' && op.result instanceof Error)
+            return import.meta.env.DEV || (op.direction === 'down' && op.result instanceof Error)
           },
         }),
         httpBatchStreamLink({
@@ -61,7 +46,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           url: `${getBaseUrl()}/api/trpc`,
           headers: () => {
             const headers = new Headers()
-            headers.set('x-trpc-source', 'nextjs-react')
+            headers.set('x-trpc-source', 'tanstack-start-react')
             return headers
           },
         }),
@@ -80,6 +65,6 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') return window.location.origin
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  if (import.meta.env.SERVER_URL) return import.meta.env.SERVER_URL
   return `http://localhost:${process.env.PORT ?? 3000}`
 }

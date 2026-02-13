@@ -1,6 +1,4 @@
-'use client'
-
-import { useUser } from '@clerk/nextjs'
+import { useUser } from '@clerk/tanstack-react-start'
 import { useCallback } from 'react'
 
 import { useUserSettings } from '~/lib/useUserSettings'
@@ -8,10 +6,6 @@ import { api } from '~/trpc/react'
 
 import type { Chat as ChatType, Message as MessageType } from '@prisma/client'
 
-/**
- * Custom hook to handle real-time synchronization of chats and messages
- * Only syncs when the user is signed in and has sync enabled in settings.
- */
 export const useRealtimeSync = () => {
   const { isSignedIn } = useUser()
   const { settings } = useUserSettings()

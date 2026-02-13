@@ -24,7 +24,7 @@ export const chatRouter = createTRPCRouter({
         modelId: z
           .enum(MODEL_IDS)
           .optional()
-          .default(env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL as ModelsIds),
+          .default(env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
       })
     )
     .mutation(async ({ input }) => {
@@ -61,7 +61,7 @@ export const chatRouter = createTRPCRouter({
             content: `Generate a concise title for a chat that starts with this message: "${input.firstMessage}"`,
           },
         ],
-        env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL as ModelsIds
+        env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds
       )
     )
 
@@ -88,7 +88,7 @@ export const chatRouter = createTRPCRouter({
         modelId: z
           .enum(MODEL_IDS)
           .optional()
-          .default(env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL as ModelsIds),
+          .default(env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -272,7 +272,7 @@ export const chatRouter = createTRPCRouter({
         modelId: z
           .enum(MODEL_IDS)
           .optional()
-          .default(env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL as ModelsIds),
+          .default(env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -539,7 +539,7 @@ export const chatRouter = createTRPCRouter({
       throw new Error('Chat is not shared.')
     }
 
-    const { clerkClient } = await import('@clerk/nextjs/server')
+    const { clerkClient } = await import('@clerk/tanstack-react-start/server')
     let ownerName = 'Unknown User'
 
     try {

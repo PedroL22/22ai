@@ -1,7 +1,5 @@
-'use client'
-
-import { useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+import { useUser } from '@clerk/tanstack-react-start'
+import { useNavigate } from '@tanstack/react-router'
 import { type MouseEvent, useEffect, useRef, useState } from 'react'
 
 import { Edit, MoreHorizontal, Pin, Share, Trash2 } from 'lucide-react'
@@ -54,11 +52,10 @@ export const ChatMenu = ({
   const deleteChatMutation = api.chat.deleteChat.useMutation()
   const renameChatMutation = api.chat.renameChat.useMutation()
 
-  const { push } = useRouter()
+  const navigate = useNavigate()
 
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Focus and select all text when entering rename mode
   useEffect(() => {
     if (isRenaming && inputRef.current) {
       inputRef.current.focus()
@@ -102,7 +99,6 @@ export const ChatMenu = ({
         isShared: newSharedState,
       })
 
-      // Copy the chat link to clipboard if sharing
       if (newSharedState) {
         navigator.clipboard.writeText(`${window.location.origin}/${chatId}`)
 
@@ -131,7 +127,6 @@ export const ChatMenu = ({
     try {
       renameChat(chatId, newTitle.trim())
 
-      // Only sync to server if user is authenticated and we're in synced mode
       if (isSignedIn && chatsDisplayMode === 'synced') {
         await renameChatMutation.mutateAsync({
           chatId,
@@ -142,7 +137,6 @@ export const ChatMenu = ({
       setIsRenaming(false)
     } catch (error) {
       console.error('❌ Failed to rename chat: ', error)
-      // Revert local change if server sync failed
       if (isSignedIn && chatsDisplayMode === 'synced') {
         renameChat(chatId, chatTitle || '')
       }
@@ -163,7 +157,7 @@ export const ChatMenu = ({
       })
 
       setShowDeleteDialog(false)
-      push('/')
+      navigate({ to: '/' })
     } catch (error) {
       console.error('❌ Failed to delete chat: ', error)
       setShowDeleteDialog(false)
@@ -175,7 +169,7 @@ export const ChatMenu = ({
       if (isMobile) {
         setIsOpen(false)
       }
-      push(`/${chatId}`)
+      navigate({ to: '/$chatId', params: { chatId } })
     }
   }
 
@@ -304,7 +298,6 @@ export const ChatMenu = ({
         </DropdownMenu>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
@@ -326,7 +319,6 @@ export const ChatMenu = ({
         </DialogContent>
       </Dialog>
 
-      {/* Share Confirmation Dialog */}
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent>
           <DialogHeader>
@@ -346,7 +338,6 @@ export const ChatMenu = ({
         </DialogContent>
       </Dialog>
 
-      {/* Unshare Confirmation Dialog */}
       <Dialog open={showUnshareDialog} onOpenChange={setShowUnshareDialog}>
         <DialogContent>
           <DialogHeader>

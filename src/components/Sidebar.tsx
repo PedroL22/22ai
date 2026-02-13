@@ -1,11 +1,7 @@
-'use client'
-
-import { UserProfile, useClerk, useUser } from '@clerk/nextjs'
+import { UserProfile, useClerk, useUser } from '@clerk/tanstack-react-start'
+import { useNavigate } from '@tanstack/react-router'
 import { motion } from 'motion/react'
 import { useTheme } from 'next-themes'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { ChevronDown, Github, Loader2, LogIn, LogOut, Moon, PanelLeft, Pin, Settings, Sun, User } from 'lucide-react'
@@ -33,9 +29,6 @@ type SidebarProps = {
   selectedChatId?: string | null | undefined
 }
 
-/**
- * Sidebar component that displays the chat list and user information.
- */
 export const Sidebar = ({ selectedChatId }: SidebarProps) => {
   const { isOpen, setIsOpen } = useSidebarStore()
   const { chats: localChats, clearChats, chatsDisplayMode, isSyncing, isInitialLoading } = useChatStore()
@@ -51,11 +44,9 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
     }
 
     if (chatsDisplayMode === 'synced') {
-      // Signed in and synced - show all chats from store (which contains synced data)
       return localChats.map((chat) => ({ ...chat, isLocal: false }))
     }
 
-    // Fallback to local chats during sync
     return localChats.map((chat) => ({ ...chat, isLocal: true }))
   })()
 
@@ -67,19 +58,15 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
 
   const groupedChats = groupChats(sortedChats)
   const { theme, setTheme, resolvedTheme } = useTheme()
-  const { push } = useRouter()
+  const navigate = useNavigate()
 
-  // Always close sidebar on mobile when the component mounts
-  // This ensures the sidebar is closed when navigating to a new page on mobile
   useEffect(() => {
-    // Check mobile state inside useEffect to avoid hydration issues
     const checkMobile = () => typeof window !== 'undefined' && window.innerWidth < 768
     if (checkMobile()) {
       setIsOpen(false)
     }
-  }, []) // Remove setIsOpen from dependencies
+  }, [])
 
-  // Handle Ctrl+B and Ctrl+Shift+O
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().includes('MAC')
@@ -93,16 +80,14 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
 
       if (isCtrlShiftO) {
         e.preventDefault()
-        // Navigate to home page for new chat
-        push('/')
+        navigate({ to: '/' })
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, setIsOpen])
+  }, [isOpen, setIsOpen, navigate])
 
-  // Handle scroll detection for gradient indicator
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current
     if (!scrollContainer) return
@@ -110,14 +95,13 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
     const checkScrollability = () => {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainer
       const canScroll = scrollHeight > clientHeight
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10 // 10px threshold
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10
       setCanScrollDown(canScroll && !isAtBottom)
     }
 
     checkScrollability()
     scrollContainer.addEventListener('scroll', checkScrollability)
 
-    // Check on content changes
     const resizeObserver = new ResizeObserver(checkScrollability)
     resizeObserver.observe(scrollContainer)
 
@@ -148,7 +132,6 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
 
   return (
     <aside className='relative'>
-      {/* Floating toggle button */}
       <div className='absolute top-4 left-2.5 z-50 md:left-3.5'>
         <Button
           variant='ghost'
@@ -162,7 +145,6 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
         </Button>
       </div>
 
-      {/* Sidebar is open based on isOpen state */}
       <motion.div
         initial={false}
         animate={isOpen ? 'open' : 'closed'}
@@ -173,9 +155,7 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className='flex h-full shrink-0 select-none flex-row overflow-hidden bg-background text-background-foreground'
       >
-        {/* Left vertical button panel */}
         <div className='flex w-16 shrink-0 flex-col items-center justify-between bg-background p-2 py-4'>
-          {/* Theme switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -218,7 +198,7 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
           </DropdownMenu>
 
           <div className='flex flex-col space-y-2'>
-            <Link
+            <a
               href='https://github.com/PedroL22/22ai'
               target='_blank'
               rel='noopener noreferrer'
@@ -227,9 +207,9 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
               <Button variant='ghost' size='icon' className='cursor-pointer dark:text-accent-foreground'>
                 <Github className='size-5' />
               </Button>
-            </Link>
+            </a>
 
-            <Link href='/settings' aria-label='Settings'>
+            <a href='/settings' aria-label='Settings'>
               <Button
                 variant='ghost'
                 size='icon'
@@ -238,11 +218,10 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
               >
                 <Settings className='size-5' />
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
 
-        {/* Sidebar content */}
         <motion.div
           variants={{
             open: { opacity: 1, pointerEvents: 'auto', transition: { delay: 0.1, duration: 0.2 } },
@@ -253,7 +232,7 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
           className='flex w-full min-w-80 flex-col p-4 px-6'
         >
           <div className='mt-2 mb-4 flex w-full items-center justify-center'>
-            <Image
+            <img
               src={
                 resolvedTheme === 'light'
                   ? '/images/icons/logotype-dark-text.svg'
@@ -283,9 +262,9 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
             className='flex min-h-0 flex-1 flex-col space-y-4'
           >
             <Button asChild>
-              <Link href='/' onClick={handleNewChatClick}>
+              <a href='/' onClick={handleNewChatClick}>
                 New chat
-              </Link>
+              </a>
             </Button>
 
             <div className='relative min-h-0 flex-1'>
@@ -342,14 +321,12 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
                 )}
               </div>
 
-              {/* Scroll indicator gradient */}
               <div
                 className={`pointer-events-none absolute right-0 bottom-0 left-0 h-8 bg-linear-to-t from-background to-transparent transition-opacity duration-300 ${canScrollDown ? 'opacity-100' : 'opacity-0'}`}
               />
             </div>
           </motion.div>
 
-          {/* User stuff */}
           {!isLoaded ? (
             <div className='flex justify-center pt-11 pb-3'>
               <Loader2 className='size-4 animate-spin' />
@@ -393,20 +370,19 @@ export const Sidebar = ({ selectedChatId }: SidebarProps) => {
             </div>
           ) : (
             <div className='flex shrink-0 justify-center pt-4'>
-              <Link
+              <a
                 href='/sign-in'
                 className='flex items-center space-x-2 rounded-lg p-3 transition-all ease-in hover:bg-accent dark:hover:bg-accent/35'
               >
                 <LogIn className='size-5' />
 
                 <span className='font-medium'>Sign in</span>
-              </Link>
+              </a>
             </div>
           )}
         </motion.div>
       </motion.div>
 
-      {/* Manage account dialog */}
       <Dialog open={manageAccountDialogOpen} onOpenChange={setManageAccountDialogOpen}>
         <DialogContent className='overflow-auto rounded-2xl border-none p-0 md:max-w-[880px]'>
           <DialogHeader className='sr-only'>

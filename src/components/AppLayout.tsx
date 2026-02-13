@@ -1,6 +1,4 @@
-'use client'
-
-import { useParams, usePathname } from 'next/navigation'
+import { useMatches, useLocation } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 
 import { ChatSearchCommand } from './ChatSearchCommand'
@@ -11,9 +9,10 @@ type AppLayoutProps = {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const params = useParams()
-  const pathname = usePathname()
-  const chatId = params?.chatId as string | undefined
+  const matches = useMatches()
+  const pathname = useLocation({ select: (location) => location.pathname })
+  const chatMatch = matches.find((m) => 'chatId' in (m.params as Record<string, string>))
+  const chatId = (chatMatch?.params as Record<string, string> | undefined)?.chatId
 
   const routesToHide = ['/sign-in', '/settings']
   const showSidebarAndSearchCommand = !routesToHide.some((route) => pathname.startsWith(route))

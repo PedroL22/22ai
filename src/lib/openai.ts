@@ -283,7 +283,7 @@ export const createChatCompletion = async (messages: ChatMessage[], modelId: Mod
     // OpenRouter (free)
     const result = await makeApiCallWithFallback((client) =>
       client.chat.completions.create({
-        model: modelId ?? (env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL as ModelsIds),
+        model: modelId ?? (env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
         messages,
         temperature: 0.7,
         max_completion_tokens: 1000,
@@ -356,7 +356,7 @@ export const createChatCompletionStream = async (messages: ChatMessage[], modelI
   if (modelId.endsWith(':free')) {
     const result = await makeApiCallWithFallback((client) =>
       client.chat.completions.create({
-        model: modelId ?? (env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL as ModelsIds),
+        model: modelId ?? (env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
         messages,
         temperature: 0.7,
         max_completion_tokens: 1000,

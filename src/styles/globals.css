@@ -1,4 +1,5 @@
-/* Monospace font imports */
+/* Font imports */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap");
@@ -10,8 +11,8 @@
 
 @theme {
   --font-sans:
-    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
+    "DM Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
   --font-mono:
     "JetBrains Mono", "Geist Mono", "Fira Code", "Berkeley Mono", "SF Mono", Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;

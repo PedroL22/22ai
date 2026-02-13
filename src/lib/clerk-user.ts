@@ -1,28 +1,11 @@
-/**
- * Utility functions for working with Clerk user emails
- */
+import type { User } from '@clerk/tanstack-react-start/server'
 
-import type { User } from '@clerk/nextjs/server'
-
-/**
- * Gets the primary email address from a Clerk user object.
- * Falls back to the first email if no primary email is set.
- *
- * @param user - The Clerk user object
- * @returns The user's email address or empty string if none found
- */
 export const getUserEmail = (user: User | null | undefined): string => {
   if (!user) return ''
 
   return user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress || ''
 }
 
-/**
- * Gets all email addresses for a user with their status
- *
- * @param user - The Clerk user object
- * @returns Array of email objects with metadata
- */
 export const getAllUserEmails = (
   user: User | null | undefined
 ): Array<{
@@ -41,12 +24,6 @@ export const getAllUserEmails = (
   }))
 }
 
-/**
- * Gets the primary verified email address, falling back to any verified email
- *
- * @param user - The Clerk user object
- * @returns The user's verified email address or empty string if none found
- */
 export const getVerifiedUserEmail = (user: User | null | undefined): string => {
   if (!user?.emailAddresses) return ''
 
@@ -60,12 +37,6 @@ export const getVerifiedUserEmail = (user: User | null | undefined): string => {
   return verifiedEmail?.emailAddress || getUserEmail(user)
 }
 
-/**
- * Type guard to check if user has a valid email
- *
- * @param user - The Clerk user object
- * @returns Boolean indicating if user has an email
- */
 export const userHasEmail = (user: User | null | undefined): user is User => {
   return Boolean(user && getUserEmail(user))
 }

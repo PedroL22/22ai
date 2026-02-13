@@ -2,8 +2,6 @@ import { v4 as uuid } from 'uuid'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { env } from '~/env'
-
 import type { Chat as ChatType, Message as MessageType } from '@prisma/client'
 import type { ModelsIds } from '~/types/models'
 
@@ -52,7 +50,7 @@ export const useChatStore = create<ChatStore>()(
       currentChatId: undefined,
       setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
       chats: [],
-      selectedModelId: env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL as ModelsIds,
+      selectedModelId: import.meta.env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds,
       setSelectedModelId: (modelId) => set({ selectedModelId: modelId }),
       streamingMessage: '',
       isStreaming: false,

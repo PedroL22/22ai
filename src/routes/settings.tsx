@@ -1,10 +1,8 @@
-'use client'
-
-import { UserProfile, useUser } from '@clerk/nextjs'
+import { createFileRoute } from '@tanstack/react-router'
+import { UserProfile, useUser } from '@clerk/tanstack-react-start'
 import { ArrowLeft, Clipboard, Database, Key, Keyboard, Smartphone, Zap } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useTheme } from 'next-themes'
-import Link from 'next/link'
 import { useState } from 'react'
 
 import { PWAInstallPrompt } from '~/components/PWAInstallPrompt'
@@ -20,7 +18,11 @@ import { useApiKeyStore } from '~/stores/useApiKeyStore'
 import { clerkThemes } from '~/lib/clerk-themes'
 import { useUserSettings } from '~/lib/useUserSettings'
 
-export default function SettingsPage() {
+export const Route = createFileRoute('/settings')({
+  component: SettingsPage,
+})
+
+function SettingsPage() {
   const [manageAccountDialogOpen, setManageAccountDialogOpen] = useState(false)
   const { settings, isLoading, updateSetting, isUpdating } = useUserSettings()
   const openaiApiKey = useApiKeyStore((s) => s.openaiApiKey)
@@ -40,7 +42,6 @@ export default function SettingsPage() {
       const text = await navigator.clipboard.readText()
       setApiKey(text.trim())
     } catch (error) {
-      // Fallback for browsers that don't support clipboard API or when permission is denied
       console.warn('Failed to read from clipboard:', error)
     }
   }
@@ -79,7 +80,7 @@ export default function SettingsPage() {
               <p className='mb-4 text-muted-foreground text-sm'>Create an account to sync your chats across devices</p>
 
               <Button asChild>
-                <Link href='/sign-in'>Sign in</Link>
+                <a href='/sign-in'>Sign in</a>
               </Button>
             </div>
           )}
@@ -283,7 +284,6 @@ export default function SettingsPage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-background to-muted/20'>
       <div className='mx-auto max-w-4xl px-4 py-8 sm:px-6'>
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -292,10 +292,10 @@ export default function SettingsPage() {
         >
           <div className='mb-4'>
             <Button variant='ghost' size='sm' asChild>
-              <Link href='/' className='gap-2'>
+              <a href='/' className='gap-2'>
                 <ArrowLeft className='size-4' />
                 Back to Chat
-              </Link>
+              </a>
             </Button>
           </div>
 
@@ -326,7 +326,6 @@ export default function SettingsPage() {
           )}
         </motion.div>
 
-        {/* Settings Sections */}
         <div className='space-y-6'>
           {settingSections.map((section, index) => (
             <motion.div
@@ -366,7 +365,6 @@ export default function SettingsPage() {
           </Dialog>
         </div>
 
-        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

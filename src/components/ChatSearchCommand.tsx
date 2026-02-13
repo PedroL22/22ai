@@ -1,6 +1,4 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
+import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import { MessageCircle, Pin } from 'lucide-react'
@@ -20,14 +18,12 @@ import { formatMessageDateForChatList } from '~/utils/format-date-for-chat-list'
 
 export function ChatSearchCommand() {
   const [open, setOpen] = useState(false)
-  const router = useRouter()
+  const navigate = useNavigate()
   const { chats } = useChatStore()
 
-  // Filter and sort chats for search
   const searchableChats = chats
     .filter((chat) => chat.title && chat.title.trim() !== '')
     .sort((a, b) => {
-      // Sort by pinned first, then by date
       if (a.isPinned && !b.isPinned) return -1
       if (!a.isPinned && b.isPinned) return 1
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -35,7 +31,6 @@ export function ChatSearchCommand() {
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      // Check for Ctrl+K (Cmd+K on Mac)
       const isMac = navigator.platform.toUpperCase().includes('MAC')
       const isCtrlK = (isMac ? e.metaKey : e.ctrlKey) && e.key === 'k'
 
@@ -51,7 +46,7 @@ export function ChatSearchCommand() {
 
   const handleSelect = (chatId: string) => {
     setOpen(false)
-    router.push(`/${chatId}`)
+    navigate({ to: '/$chatId', params: { chatId } })
   }
 
   return (
@@ -93,7 +88,7 @@ export function ChatSearchCommand() {
           <CommandItem
             onSelect={() => {
               setOpen(false)
-              router.push('/')
+              navigate({ to: '/' })
             }}
           >
             <MessageCircle className='size-3 text-muted-foreground' />

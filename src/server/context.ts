@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@clerk/tanstack-react-start/server'
 
 export const createContext = async () => {
   return { auth: await auth() }

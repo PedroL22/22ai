@@ -1,13 +1,16 @@
-'use client'
-
-import { SignIn } from '@clerk/nextjs'
+import { createFileRoute } from '@tanstack/react-router'
+import { SignIn } from '@clerk/tanstack-react-start'
 import { useTheme } from 'next-themes'
 
 import { ThemeToggle } from '~/components/ThemeToggle'
 
 import { clerkThemes } from '~/lib/clerk-themes'
 
-export default function SignInPage() {
+export const Route = createFileRoute('/sign-in')({
+  component: SignInPage,
+})
+
+function SignInPage() {
   const { resolvedTheme } = useTheme()
 
   return (

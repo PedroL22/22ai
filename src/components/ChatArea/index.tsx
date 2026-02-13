@@ -1,9 +1,7 @@
-'use client'
-
-import { useUser } from '@clerk/nextjs'
+import { useUser } from '@clerk/tanstack-react-start'
 import throttle from 'lodash/throttle'
 import { AnimatePresence, motion } from 'motion/react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 
@@ -89,7 +87,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
   const isOwner = ownershipData?.isOwner ?? false
   const isSharedChat = currentChat?.isShared || sharedChatData?.isShared || false
 
-  const router = useRouter()
+  const navigate = useNavigate()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -102,7 +100,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
     }, 200)
   ).current
 
-  // Reset loading state when chatId changes
   useEffect(() => {
     if (chatId) {
       setIsInitialLoading(true)
@@ -131,7 +128,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         setMessages(storedMessages)
         setIsInitialLoading(false)
       } else {
-        // Still loading or no messages found
         if (!isDbMessagesLoading && !isSharedMessagesLoading && !isSharedChatLoading) {
           setMessages([])
           setIsInitialLoading(false)
@@ -142,7 +138,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
       setIsInitialLoading(false)
     }
 
-    // Only auto-scroll on initial load
     setTimeout(() => {
       const hasMessages =
         chatId &&
@@ -150,7 +145,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
           (dbMessages && dbMessages.length > 0) ||
           (currentChat && getMessages(chatId).length > 0))
 
-      // Only scroll if user hasn't manually scrolled up and we have messages
       if (hasMessages && !userScrolledUp) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
         setShowScrollToBottom(false)
@@ -169,7 +163,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
   ])
 
   useEffect(() => {
-    // Only auto-scroll during streaming if user hasn't manually scrolled up
     if (isStreaming && !userScrolledUp) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
       setShowScrollToBottom(false)
@@ -182,14 +175,12 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
       const container = chatContainerRef.current
       const { scrollTop, scrollHeight, clientHeight } = container
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50 // 50px threshold
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50
 
-      // If user scrolled up from bottom, mark it as intentional
       if (!isAtBottom && !userScrolledUp) {
         setShowScrollToBottom(true)
         setUserScrolledUp(true)
       } else if (isAtBottom) {
-        // User is back at bottom
         setShowScrollToBottom(false)
         setUserScrolledUp(false)
       }
@@ -237,7 +228,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
       if (!currentChatId) {
         currentChatId = uuid()
 
-        router.push(`/${currentChatId}`)
+        navigate({ to: '/$chatId', params: { chatId: currentChatId } })
 
         const newChat: ChatType = {
           id: currentChatId,
@@ -319,7 +310,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
       setIsStreaming(true)
       setStreamingMessage('')
-      // clean the buffer before starting the streaming
       bufferRef.current = ''
 
       await createStreamingChatCompletion(
@@ -327,7 +317,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         selectedModelId,
         (chunk) => {
           if (chunk.type === 'chunk' && chunk.content) {
-            // use buffer instead of setStreamingMessage directly
             bufferRef.current += chunk.content
             flushBuffer()
           }
@@ -358,7 +347,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
           setMessages(getMessages(currentChatId!))
 
-          // throttle cleanup on completion
           flushBuffer.cancel()
           bufferRef.current = ''
           setStreamingMessage('')
@@ -383,7 +371,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
           setMessages(getMessages(currentChatId!))
 
-          // throttle cleanup on error
           flushBuffer.cancel()
           bufferRef.current = ''
           setStreamingMessage('')
@@ -411,7 +398,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         setMessages(getMessages(chatId))
       }
 
-      // throttle cleanup on error
       flushBuffer.cancel()
       bufferRef.current = ''
       setStreamingMessage('')
@@ -736,15 +722,13 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
     try {
       const { id: newChatId, chat: newChat } = branchChat(chatId, messageIndex)
 
-      // Sync the new branched chat to the database
       await syncChat(newChat)
 
-      // Then sync all messages in the branched chat
       for (const message of newChat.messages) {
         await syncMessage(message)
       }
 
-      router.push(`/${newChatId}`)
+      navigate({ to: '/$chatId', params: { chatId: newChatId } })
 
       if (modelId) {
         setSelectedModelId(modelId)
@@ -756,7 +740,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
   return (
     <div className='relative flex w-full flex-col items-center bg-accent'>
-      {/* Shared indicator */}
       {isSharedChat && (
         <div className='absolute top-4 right-4 z-10 flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 font-medium text-primary text-xs backdrop-blur-sm'>
           <Share2 className='size-3' />
@@ -853,7 +836,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         <div ref={messagesEndRef} className='h-1' />
       </div>
 
-      {/* Scroll to bottom button */}
       <AnimatePresence>
         {showScrollToBottom && (
           <motion.div
