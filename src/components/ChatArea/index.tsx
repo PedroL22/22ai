@@ -1,7 +1,7 @@
 import { useUser } from '@clerk/tanstack-react-start'
+import { useNavigate } from '@tanstack/react-router'
 import throttle from 'lodash/throttle'
 import { AnimatePresence, motion } from 'motion/react'
-import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 
@@ -753,7 +753,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
       <div
         ref={chatContainerRef}
-        className='scrollbar-hide w-full max-w-[768px] flex-1 space-y-10 overflow-y-auto overscroll-contain px-6 lg:px-4 [&:not(*:is(@supports(-moz-appearance:none)))]:py-36 sm:[&:not(*:is(@supports(-moz-appearance:none)))]:py-38 [@supports(-moz-appearance:none)]:py-42 sm:[@supports(-moz-appearance:none)]:py-44'
+        className='scrollbar-hide w-full max-w-[768px] flex-1 space-y-12 overflow-y-auto overscroll-contain px-6 lg:px-4 [&:not(*:is(@supports(-moz-appearance:none)))]:py-36 sm:[&:not(*:is(@supports(-moz-appearance:none)))]:py-38 [@supports(-moz-appearance:none)]:py-42 sm:[@supports(-moz-appearance:none)]:py-44'
       >
         {messages.length === 0 && !isStreaming ? (
           <div className='flex items-center justify-center pb-4 sm:h-full sm:pb-0'>
@@ -782,7 +782,6 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
                 layout='position'
                 className='flex flex-col'
               >
-                {' '}
                 <Message
                   message={msg}
                   messageIndex={index}

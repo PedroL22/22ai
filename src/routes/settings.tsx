@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { UserProfile, useUser } from '@clerk/tanstack-react-start'
+import { createFileRoute } from '@tanstack/react-router'
 import { ArrowLeft, Clipboard, Database, Key, Keyboard, Smartphone, Zap } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useTheme } from 'next-themes'
@@ -282,7 +282,7 @@ function SettingsPage() {
   ]
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-background to-muted/20'>
+    <div className='min-h-screen bg-linear-to-br from-background to-muted/20'>
       <div className='mx-auto max-w-4xl px-4 py-8 sm:px-6'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
