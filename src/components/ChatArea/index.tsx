@@ -10,7 +10,9 @@ import { Button } from '~/components/ui/button'
 import { Textarea } from '~/components/ui/textarea'
 import { EmptyState } from './components/EmptyState'
 import { Message } from './components/Message'
+import { ThinkingBlock } from './components/Message/components/ThinkingBlock'
 import { ModelSelector } from './components/ModelSelector'
+import { ReasoningLevelSelector } from './components/ReasoningLevelSelector'
 
 import { useChatStore } from '~/stores/useChatStore'
 
@@ -20,7 +22,8 @@ import { api } from '~/trpc/react'
 import { createSystemPrompt } from '~/utils/system-prompt'
 
 import type { Chat as ChatType, Message as MessageType } from '@prisma/client'
-import type { ModelsIds } from '~/types/models'
+import type { ModelsIds, ReasoningLevel } from '~/types/models'
+import { MODELS } from '~/types/models'
 
 type ChatAreaProps = {
   chatId?: string
@@ -41,12 +44,16 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
     addMessage,
     getMessages,
     streamingMessage,
+    streamingReasoning,
     isStreaming,
     setStreamingMessage,
+    setStreamingReasoning,
     setIsStreaming,
     renameChat,
     selectedModelId,
     setSelectedModelId,
+    reasoningLevel,
+    setReasoningLevel,
     removeMessagesFromIndex,
     replaceMessage,
     branchChat,
@@ -92,13 +99,23 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
-  const bufferRef = useRef<string>('')
-  const flushBuffer = useRef(
+  const contentBufferRef = useRef<string>('')
+  const reasoningBufferRef = useRef<string>('')
+  const flushContentBuffer = useRef(
     throttle(() => {
-      setStreamingMessage((prev) => prev + bufferRef.current)
-      bufferRef.current = ''
-    }, 200)
+      setStreamingMessage((prev) => prev + contentBufferRef.current)
+      contentBufferRef.current = ''
+    }, 50)
   ).current
+  const flushReasoningBuffer = useRef(
+    throttle(() => {
+      setStreamingReasoning((prev) => prev + reasoningBufferRef.current)
+      reasoningBufferRef.current = ''
+    }, 50)
+  ).current
+
+  const currentModel = MODELS.find((m) => m.id === selectedModelId)
+  const supportsReasoning = currentModel?.supportsReasoning ?? false
 
   useEffect(() => {
     if (chatId) {
@@ -118,6 +135,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
           ...msg,
           chatId: chatId,
           modelId: null,
+          reasoning: null,
           isError: false,
           userId: '',
         }))
@@ -195,9 +213,10 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
   useEffect(() => {
     return () => {
-      flushBuffer.cancel()
+      flushContentBuffer.cancel()
+      flushReasoningBuffer.cancel()
     }
-  }, [flushBuffer])
+  }, [flushContentBuffer, flushReasoningBuffer])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -208,6 +227,33 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
   const handleSuggestionClick = (suggestion: string) => {
     if (isStreaming) return
     setMessage(suggestion)
+  }
+
+  const resetStreamingBuffers = () => {
+    contentBufferRef.current = ''
+    reasoningBufferRef.current = ''
+    setStreamingMessage('')
+    setStreamingReasoning('')
+  }
+
+  const cancelStreamingBuffers = () => {
+    flushContentBuffer.cancel()
+    flushReasoningBuffer.cancel()
+    contentBufferRef.current = ''
+    reasoningBufferRef.current = ''
+    setStreamingMessage('')
+    setStreamingReasoning('')
+  }
+
+  const handleStreamingChunk = (chunk: { type: string; content?: string; reasoning?: string }) => {
+    if (chunk.type === 'chunk' && chunk.content) {
+      contentBufferRef.current += chunk.content
+      flushContentBuffer()
+    }
+    if (chunk.type === 'thinking' && chunk.reasoning) {
+      reasoningBufferRef.current += chunk.reasoning
+      flushReasoningBuffer()
+    }
   }
 
   const handleSendMessage = async () => {
@@ -282,6 +328,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         id: uuid(),
         role: 'user',
         content: userMessage,
+        reasoning: null,
         isError: false,
         createdAt: new Date(),
         userId: '',
@@ -309,23 +356,18 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
       }))
 
       setIsStreaming(true)
-      setStreamingMessage('')
-      bufferRef.current = ''
+      resetStreamingBuffers()
 
       await createStreamingChatCompletion(
         allMessages,
         selectedModelId,
-        (chunk) => {
-          if (chunk.type === 'chunk' && chunk.content) {
-            bufferRef.current += chunk.content
-            flushBuffer()
-          }
-        },
-        async (fullMessage) => {
+        handleStreamingChunk,
+        async (fullMessage, fullReasoning) => {
           const assistantMessage: MessageType = {
             id: uuid(),
             role: 'assistant',
             content: fullMessage,
+            reasoning: fullReasoning || null,
             isError: false,
             createdAt: new Date(),
             userId: '',
@@ -347,9 +389,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
           setMessages(getMessages(currentChatId!))
 
-          flushBuffer.cancel()
-          bufferRef.current = ''
-          setStreamingMessage('')
+          cancelStreamingBuffers()
           setIsStreaming(false)
         },
         async (error) => {
@@ -359,6 +399,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
             id: uuid(),
             role: 'assistant',
             content: error,
+            reasoning: null,
             isError: true,
             createdAt: new Date(),
             userId: '',
@@ -371,11 +412,10 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
           setMessages(getMessages(currentChatId!))
 
-          flushBuffer.cancel()
-          bufferRef.current = ''
-          setStreamingMessage('')
+          cancelStreamingBuffers()
           setIsStreaming(false)
-        }
+        },
+        supportsReasoning ? reasoningLevel : undefined
       )
     } catch (err) {
       console.error('❌ Error sending message: ', err)
@@ -385,6 +425,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
           id: uuid(),
           role: 'assistant',
           content: err instanceof Error ? err.message : 'An unexpected error occurred while sending your message.',
+          reasoning: null,
           isError: true,
           createdAt: new Date(),
           userId: '',
@@ -398,9 +439,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         setMessages(getMessages(chatId))
       }
 
-      flushBuffer.cancel()
-      bufferRef.current = ''
-      setStreamingMessage('')
+      cancelStreamingBuffers()
       setIsStreaming(false)
     }
   }
@@ -451,23 +490,18 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
       }))
 
       setIsStreaming(true)
-      setStreamingMessage('')
-      bufferRef.current = ''
+      resetStreamingBuffers()
 
       await createStreamingChatCompletion(
         allMessages,
         selectedModelId,
-        (chunk) => {
-          if (chunk.type === 'chunk' && chunk.content) {
-            bufferRef.current += chunk.content
-            flushBuffer()
-          }
-        },
-        async (fullMessage) => {
+        handleStreamingChunk,
+        async (fullMessage, fullReasoning) => {
           const assistantMessage: MessageType = {
             id: uuid(),
             role: 'assistant',
             content: fullMessage,
+            reasoning: fullReasoning || null,
             isError: false,
             createdAt: new Date(),
             userId: '',
@@ -479,11 +513,8 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
           syncMessage(assistantMessage)
 
           setMessages((prev) => [...prev, assistantMessage])
+          cancelStreamingBuffers()
           setIsStreaming(false)
-
-          flushBuffer.cancel()
-          bufferRef.current = ''
-          setStreamingMessage('')
         },
         async (error) => {
           console.error('❌ Streaming error after edit: ', error)
@@ -492,6 +523,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
             id: uuid(),
             role: 'assistant',
             content: error,
+            reasoning: null,
             isError: true,
             createdAt: new Date(),
             userId: '',
@@ -504,12 +536,10 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
           setMessages((prev) => [...prev, errorMessage])
 
+          cancelStreamingBuffers()
           setIsStreaming(false)
-
-          flushBuffer.cancel()
-          bufferRef.current = ''
-          setStreamingMessage('')
-        }
+        },
+        supportsReasoning ? reasoningLevel : undefined
       )
     } catch (error) {
       console.error('❌ Failed to get AI response after edit: ', error)
@@ -519,6 +549,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         role: 'assistant',
         content:
           error instanceof Error ? error.message : 'An unexpected error occurred while getting AI response after edit.',
+        reasoning: null,
         isError: true,
         createdAt: new Date(),
         userId: '',
@@ -531,12 +562,12 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
       setMessages((prev) => [...prev, errorMessage])
 
+      cancelStreamingBuffers()
       setIsStreaming(false)
-      setStreamingMessage('')
     }
   }
 
-  const handleRetry = async (messageIndex: number, modelId?: ModelsIds) => {
+  const handleRetry = async (messageIndex: number, modelId?: ModelsIds, selectedReasoningLevel?: ReasoningLevel) => {
     if (isStreaming || !chatId) return
 
     const targetMessage = messages[messageIndex]
@@ -548,6 +579,9 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
     }
 
     const retryModelId = modelId || (targetMessage.modelId as ModelsIds) || selectedModelId
+    const retryModel = MODELS.find((m) => m.id === retryModelId)
+    const supportsReasoningForRetry = retryModel?.supportsReasoning ?? false
+    const effectiveReasoningLevel = supportsReasoningForRetry ? (selectedReasoningLevel ?? reasoningLevel) : undefined
 
     const updatedTargetMessage: MessageType = {
       ...targetMessage,
@@ -573,23 +607,18 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
       }))
 
       setIsStreaming(true)
-      setStreamingMessage('')
-      bufferRef.current = ''
+      resetStreamingBuffers()
 
       await createStreamingChatCompletion(
         contextMessages,
         retryModelId,
-        (chunk) => {
-          if (chunk.type === 'chunk' && chunk.content) {
-            bufferRef.current += chunk.content
-            flushBuffer()
-          }
-        },
-        async (fullMessage) => {
+        handleStreamingChunk,
+        async (fullMessage, fullReasoning) => {
           const assistantMessage: MessageType = {
             id: uuid(),
             role: 'assistant',
             content: fullMessage,
+            reasoning: fullReasoning || null,
             isError: false,
             createdAt: new Date(),
             userId: '',
@@ -610,9 +639,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
           }
           setMessages(getMessages(chatId))
 
-          flushBuffer.cancel()
-          bufferRef.current = ''
-          setStreamingMessage('')
+          cancelStreamingBuffers()
           setIsStreaming(false)
         },
         async (error) => {
@@ -622,6 +649,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
             id: uuid(),
             role: 'assistant',
             content: error,
+            reasoning: null,
             isError: true,
             createdAt: new Date(),
             userId: '',
@@ -634,9 +662,10 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
           setMessages(getMessages(chatId))
 
-          setStreamingMessage('')
+          cancelStreamingBuffers()
           setIsStreaming(false)
-        }
+        },
+        effectiveReasoningLevel
       )
     } else if (targetMessage.role === 'assistant') {
       removeMessagesFromIndex(chatId, messageIndex)
@@ -651,23 +680,18 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
       }))
 
       setIsStreaming(true)
-      setStreamingMessage('')
-      bufferRef.current = ''
+      resetStreamingBuffers()
 
       await createStreamingChatCompletion(
         contextMessages,
         retryModelId,
-        (chunk) => {
-          if (chunk.type === 'chunk' && chunk.content) {
-            bufferRef.current += chunk.content
-            flushBuffer()
-          }
-        },
-        async (fullMessage) => {
+        handleStreamingChunk,
+        async (fullMessage, fullReasoning) => {
           const assistantMessage: MessageType = {
             id: uuid(),
             role: 'assistant',
             content: fullMessage,
+            reasoning: fullReasoning || null,
             isError: false,
             createdAt: new Date(),
             userId: '',
@@ -687,7 +711,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
             syncChat(updatedChat)
           }
           setMessages(getMessages(chatId))
-          setStreamingMessage('')
+          cancelStreamingBuffers()
           setIsStreaming(false)
         },
         async (error) => {
@@ -697,6 +721,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
             id: uuid(),
             role: 'assistant',
             content: error,
+            reasoning: null,
             isError: true,
             createdAt: new Date(),
             userId: '',
@@ -709,14 +734,15 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
 
           setMessages(getMessages(chatId))
 
-          setStreamingMessage('')
+          cancelStreamingBuffers()
           setIsStreaming(false)
-        }
+        },
+        effectiveReasoningLevel
       )
     }
   }
 
-  const handleBranch = async (messageIndex: number, modelId?: ModelsIds) => {
+  const handleBranch = async (messageIndex: number, modelId?: ModelsIds, selectedReasoningLevel?: ReasoningLevel) => {
     if (!chatId) return
 
     try {
@@ -728,10 +754,84 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
         await syncMessage(message)
       }
 
-      navigate({ to: '/$chatId', params: { chatId: newChatId } })
-
       if (modelId) {
         setSelectedModelId(modelId)
+      }
+
+      if (selectedReasoningLevel) {
+        setReasoningLevel(selectedReasoningLevel)
+      }
+
+      navigate({ to: '/$chatId', params: { chatId: newChatId } })
+
+      if (modelId && newChat.messages.length > 0) {
+        const lastMessage = newChat.messages[newChat.messages.length - 1]
+        if (lastMessage?.role === 'user') {
+          const branchModel = MODELS.find((m) => m.id === modelId)
+          const supportsReasoningForBranch = branchModel?.supportsReasoning ?? false
+          const effectiveReasoningLevelForBranch = supportsReasoningForBranch
+            ? (selectedReasoningLevel ?? reasoningLevel)
+            : undefined
+
+          const contextMessages = [createSystemPrompt(), ...newChat.messages].map((msg) => ({
+            role: msg.role as 'user' | 'assistant' | 'system',
+            content: msg.content,
+          }))
+
+          setIsStreaming(true)
+          resetStreamingBuffers()
+
+          await createStreamingChatCompletion(
+            contextMessages,
+            modelId,
+            handleStreamingChunk,
+            async (fullMessage, fullReasoning) => {
+              const assistantMessage: MessageType = {
+                id: uuid(),
+                role: 'assistant',
+                content: fullMessage,
+                reasoning: fullReasoning || null,
+                isError: false,
+                createdAt: new Date(),
+                userId: '',
+                chatId: newChatId,
+                modelId: modelId,
+              }
+
+              addMessage(newChatId, assistantMessage)
+              syncMessage(assistantMessage)
+
+              setMessages(getMessages(newChatId))
+
+              cancelStreamingBuffers()
+              setIsStreaming(false)
+            },
+            async (error) => {
+              console.error('❌ Branch streaming error: ', error)
+
+              const errorMessage: MessageType = {
+                id: uuid(),
+                role: 'assistant',
+                content: error,
+                reasoning: null,
+                isError: true,
+                createdAt: new Date(),
+                userId: '',
+                chatId: newChatId,
+                modelId: modelId,
+              }
+
+              addMessage(newChatId, errorMessage)
+              syncMessage(errorMessage)
+
+              setMessages(getMessages(newChatId))
+
+              cancelStreamingBuffers()
+              setIsStreaming(false)
+            },
+            effectiveReasoningLevelForBranch
+          )
+        }
       }
     } catch (error) {
       console.error('❌ Failed to branch chat: ', error)
@@ -793,7 +893,7 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
               </motion.div>
             ))}
 
-            {isStreaming && streamingMessage && (
+            {isStreaming && (streamingMessage || streamingReasoning) && (
               <motion.div
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -801,24 +901,30 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
                 layout='position'
                 className='flex flex-col'
               >
-                <Message
-                  message={{
-                    role: 'assistant',
-                    content: streamingMessage,
-                    isError: false,
-                    createdAt: new Date(),
-                    modelId: selectedModelId,
-                  }}
-                  messageIndex={messages.length}
-                  isStreaming={true}
-                  onRetry={handleRetry}
-                  onEdit={handleEdit}
-                  onBranch={handleBranch}
-                />
+                {supportsReasoning && streamingReasoning && (
+                  <ThinkingBlock reasoning={streamingReasoning} isStreaming={true} />
+                )}
+                {streamingMessage && (
+                  <Message
+                    message={{
+                      role: 'assistant',
+                      content: streamingMessage,
+                      reasoning: streamingReasoning || null,
+                      isError: false,
+                      createdAt: new Date(),
+                      modelId: selectedModelId,
+                    }}
+                    messageIndex={messages.length}
+                    isStreaming={true}
+                    onRetry={handleRetry}
+                    onEdit={handleEdit}
+                    onBranch={handleBranch}
+                  />
+                )}
               </motion.div>
             )}
 
-            {isStreaming && !streamingMessage && (
+            {isStreaming && !streamingMessage && !streamingReasoning && (
               <motion.div
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -826,7 +932,9 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
                 layout='position'
                 className='flex flex-col'
               >
-                <div className='animate-pulse p-4 text-muted-foreground text-sm'>Assistant is thinking...</div>
+                <div className='animate-pulse p-4 text-muted-foreground text-sm'>
+                  {supportsReasoning ? 'Thinking...' : 'Assistant is thinking...'}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -892,7 +1000,13 @@ export const ChatArea = ({ chatId }: ChatAreaProps) => {
           </Button>
         </div>
 
-        <ModelSelector />
+        <div className='flex items-center gap-2'>
+          <ModelSelector />
+
+          {supportsReasoning && (
+            <ReasoningLevelSelector reasoningLevel={reasoningLevel} onReasoningLevelChange={setReasoningLevel} />
+          )}
+        </div>
       </div>
     </div>
   )

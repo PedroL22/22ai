@@ -2,7 +2,8 @@ import OpenAI from 'openai'
 
 import { env } from '~/env'
 
-import type { ModelsIds } from '~/types/models'
+import type { ModelsIds, ReasoningLevel } from '~/types/models'
+import { REASONING_LEVELS } from '~/types/models'
 
 // OpenRouter client (for free models only)
 const createOpenRouterClient = (): OpenAI => {
@@ -29,21 +30,29 @@ async function createAnthropicChatCompletion(
   messages: ChatMessage[],
   modelId: ModelsIds,
   apiKey: string,
-  stream = false
+  stream = false,
+  reasoningLevel?: ReasoningLevel
 ) {
   const url = 'https://api.anthropic.com/v1/messages'
   const modelName = modelId.replace(/^anthropic\//, '').replace(/:byok$/, '')
 
-  // Correctly separate the system prompt from the conversational history
   const systemPrompt = messages.find((m) => m.role === 'system')?.content
   const conversationMessages = messages.filter((m) => m.role !== 'system')
 
-  const body = {
+  const body: Record<string, any> = {
     model: modelName,
     max_tokens: 1024,
-    system: systemPrompt, // Use the dedicated 'system' parameter
-    messages: conversationMessages, // Pass the full alternating user/assistant history
+    system: systemPrompt,
+    messages: conversationMessages,
     stream,
+  }
+
+  if (modelId.includes('claude-3.7') || modelId.includes('claude-4')) {
+    const reasoningConfig = reasoningLevel ? REASONING_LEVELS[reasoningLevel] : REASONING_LEVELS.medium
+    body.thinking = {
+      type: 'enabled',
+      budget_tokens: reasoningConfig.anthropicBudgetTokens,
+    }
   }
 
   const res = await fetch(url, {
@@ -61,8 +70,18 @@ async function createAnthropicChatCompletion(
     return { success: true, stream: res.body }
   }
   const data = await res.json()
-  // The response structure for Claude is {..., "content": [{"type": "text", "text": "..."}]}
-  return { success: true, message: data.content?.[0]?.text || '' }
+  let message = ''
+  let reasoning = ''
+
+  for (const block of data.content || []) {
+    if (block.type === 'text') {
+      message += block.text || ''
+    } else if (block.type === 'thinking') {
+      reasoning += block.thinking || ''
+    }
+  }
+
+  return { success: true, message, reasoning }
 }
 
 const parseGeminiRetryDelay = (rawDelay?: string): string | null => {
@@ -352,14 +371,22 @@ export const createChatCompletion = async (messages: ChatMessage[], modelId: Mod
   return { success: false, error: 'Unknown model provider.' }
 }
 
-export const createChatCompletionStream = async (messages: ChatMessage[], modelId: ModelsIds, apiKey?: string) => {
+export const createChatCompletionStream = async (
+  messages: ChatMessage[],
+  modelId: ModelsIds,
+  apiKey?: string,
+  reasoningLevel?: ReasoningLevel
+) => {
   if (modelId.endsWith(':free')) {
+    const isDeepSeek = modelId.startsWith('deepseek/')
+    const reasoningConfig = reasoningLevel ? REASONING_LEVELS[reasoningLevel] : REASONING_LEVELS.medium
+
     const result = await makeApiCallWithFallback((client) =>
       client.chat.completions.create({
         model: modelId ?? (env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
         messages,
         temperature: 0.7,
-        max_completion_tokens: 1000,
+        max_completion_tokens: isDeepSeek ? reasoningConfig.deepSeekMaxTokens : 1000,
         stream: true,
       })
     )
@@ -373,14 +400,18 @@ export const createChatCompletionStream = async (messages: ChatMessage[], modelI
     if (!apiKey) return { success: false, error: '❌ No OpenAI API key set.', stream: null }
 
     const client = createNativeOpenAIClient(apiKey)
+    const modelName = modelId.replace(/^openai\//, '').replace(/:byok$/, '')
+    const isReasoningModel = modelName.startsWith('o') || modelName.startsWith('gpt-5')
+    const reasoningConfig = reasoningLevel ? REASONING_LEVELS[reasoningLevel] : REASONING_LEVELS.medium
 
     try {
       const stream = await client.chat.completions.create({
-        model: modelId.replace(/^openai\//, '').replace(/:byok$/, ''),
+        model: modelName,
         messages,
         temperature: 0.7,
         max_tokens: 1000,
         stream: true,
+        ...(isReasoningModel && { reasoning_effort: reasoningConfig.openAIReasoningEffort }),
       })
       return { success: true, stream }
     } catch (error: any) {
@@ -392,7 +423,7 @@ export const createChatCompletionStream = async (messages: ChatMessage[], modelI
     if (!apiKey) return { success: false, error: '❌ No Anthropic API key set.', stream: null }
 
     try {
-      const result = await createAnthropicChatCompletion(messages, modelId, apiKey, true)
+      const result = await createAnthropicChatCompletion(messages, modelId, apiKey, true, reasoningLevel)
       return { success: true, stream: result.stream }
     } catch (error: any) {
       return { success: false, error: error.message, stream: null }

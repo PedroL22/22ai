@@ -1,20 +1,32 @@
 import type { ChatMessage } from '~/lib/openai'
 import { useApiKeyStore } from '~/stores/useApiKeyStore'
-import type { ModelsIds } from '~/types/models'
+import type { ModelsIds, ReasoningLevel } from '~/types/models'
 
 export type StreamResponse = {
-  type: 'chunk' | 'done' | 'error'
+  type: 'chunk' | 'thinking' | 'done' | 'error'
   content?: string
-  fullMessage?: string
+  reasoning?: string
   error?: string
   done: boolean
 }
 
+let abortController: AbortController | null = null
+
+export const cancelStream = () => {
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+}
+
 export async function* streamChatCompletion(
   messages: ChatMessage[],
-  modelId: ModelsIds
+  modelId: ModelsIds,
+  reasoningLevel?: ReasoningLevel
 ): AsyncGenerator<StreamResponse, void, unknown> {
   try {
+    abortController = new AbortController()
+
     const { openaiApiKey, anthropicApiKey, geminiApiKey, grokApiKey } = useApiKeyStore.getState()
 
     let apiKey: string | undefined
@@ -33,7 +45,9 @@ export async function* streamChatCompletion(
         messages,
         modelId,
         apiKey,
+        reasoningLevel,
       }),
+      signal: abortController.signal,
     })
 
     if (!response.ok) {
@@ -102,15 +116,27 @@ export async function createStreamingChatCompletion(
   messages: ChatMessage[],
   modelId: ModelsIds,
   onChunk: (chunk: StreamResponse) => void,
-  onComplete: (fullMessage: string) => void,
-  onError: (error: string) => void
+  onComplete: (fullMessage: string, fullReasoning?: string) => void,
+  onError: (error: string) => void,
+  reasoningLevel?: ReasoningLevel
 ): Promise<void> {
   try {
-    for await (const chunk of streamChatCompletion(messages, modelId)) {
+    let fullMessage = ''
+    let fullReasoning = ''
+
+    for await (const chunk of streamChatCompletion(messages, modelId, reasoningLevel)) {
       onChunk(chunk)
 
-      if (chunk.type === 'done' && chunk.fullMessage) {
-        onComplete(chunk.fullMessage)
+      if (chunk.type === 'chunk' && chunk.content) {
+        fullMessage += chunk.content
+      }
+
+      if (chunk.type === 'thinking' && chunk.reasoning) {
+        fullReasoning += chunk.reasoning
+      }
+
+      if (chunk.type === 'done') {
+        onComplete(fullMessage, fullReasoning || undefined)
         return
       }
 

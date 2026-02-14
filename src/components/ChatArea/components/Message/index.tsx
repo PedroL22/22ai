@@ -28,7 +28,7 @@ import { formatMessageDateForChatHistory } from '~/utils/format-date-for-chat-hi
 import { getModelName } from '~/utils/get-model-name'
 
 import type { Message as MessageType } from '@prisma/client'
-import type { ModelsIds } from '~/types/models'
+import type { ModelsIds, ReasoningLevel } from '~/types/models'
 
 const messageVariants = cva('group relative mt-2 flex flex-col rounded-2xl text-base', {
   variants: {
@@ -47,9 +47,9 @@ type MessageProps = {
   message: Omit<MessageType, 'id' | 'userId' | 'chatId'>
   messageIndex: number
   isStreaming?: boolean
-  onRetry?: (messageIndex: number, modelId?: ModelsIds) => void
+  onRetry?: (messageIndex: number, modelId?: ModelsIds, reasoningLevel?: ReasoningLevel) => void
   onEdit?: (messageIndex: number, newContent: string) => void
-  onBranch?: (messageIndex: number, modelId?: ModelsIds) => void
+  onBranch?: (messageIndex: number, modelId?: ModelsIds, reasoningLevel?: ReasoningLevel) => void
 }
 
 export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, onBranch }: MessageProps) => {
@@ -176,15 +176,15 @@ export const Message = ({ message, messageIndex, isStreaming, onRetry, onEdit, o
     []
   )
 
-  const handleRetry = (modelId?: ModelsIds) => {
+  const handleRetry = (modelId?: ModelsIds, reasoningLevel?: ReasoningLevel) => {
     if (onRetry) {
-      onRetry(messageIndex, modelId)
+      onRetry(messageIndex, modelId, reasoningLevel)
     }
   }
 
-  const handleBranch = (modelId?: ModelsIds) => {
+  const handleBranch = (modelId?: ModelsIds, reasoningLevel?: ReasoningLevel) => {
     if (onBranch) {
-      onBranch(messageIndex, modelId)
+      onBranch(messageIndex, modelId, reasoningLevel)
     }
   }
 

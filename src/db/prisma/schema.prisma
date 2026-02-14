@@ -46,6 +46,7 @@ model Message {
     id        String      @id @default(uuid())
     role      MessageRole
     content   String
+    reasoning String?
     modelId   String?
     isError   Boolean     @default(false)
     createdAt DateTime    @default(now())

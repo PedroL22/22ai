@@ -20,7 +20,62 @@ const streamRequestSchema = z.object({
     .optional()
     .default(env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds),
   apiKey: z.string().trim().max(MAX_API_KEY_LENGTH).optional(),
+  reasoningLevel: z.enum(['low', 'medium', 'high']).optional(),
 })
+
+const isReasoningModel = (modelId: ModelsIds): boolean => {
+  const model = MODELS.find((m) => m.id === modelId)
+  return model?.supportsReasoning ?? false
+}
+
+type StreamEventType = 'chunk' | 'thinking' | 'done' | 'error'
+
+type StreamEvent = {
+  type: StreamEventType
+  content?: string
+  reasoning?: string
+  done: boolean
+}
+
+const parseDeepSeekReasoning = (chunk: any): { content: string; reasoning: string } => {
+  const delta = chunk.choices?.[0]?.delta
+  const reasoningContent = delta?.reasoning_content || delta?.reasoning || ''
+  const content = delta?.content || ''
+  return { content, reasoning: reasoningContent }
+}
+
+const parseAnthropicStreamEvent = (lines: string[]): StreamEvent[] => {
+  const events: StreamEvent[] = []
+
+  for (const line of lines) {
+    if (!line.startsWith('data: ')) continue
+
+    try {
+      const data = JSON.parse(line.slice(6))
+
+      if (data.type === 'content_block_delta') {
+        const delta = data.delta
+        if (delta.type === 'thinking_delta') {
+          events.push({
+            type: 'thinking',
+            reasoning: delta.thinking || '',
+            done: false,
+          })
+        } else if (delta.type === 'text_delta') {
+          events.push({
+            type: 'chunk',
+            content: delta.text || '',
+            done: false,
+          })
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  return events
+}
 
 export const Route = createFileRoute('/api/chat/stream')({
   server: {
@@ -28,9 +83,9 @@ export const Route = createFileRoute('/api/chat/stream')({
       POST: async ({ request }: { request: Request }) => {
         try {
           const body = await request.json()
-          const { messages, modelId, apiKey } = streamRequestSchema.parse(body)
+          const { messages, modelId, apiKey, reasoningLevel } = streamRequestSchema.parse(body)
 
-          const { data, error } = await tryCatch(createChatCompletionStream(messages, modelId, apiKey))
+          const { data, error } = await tryCatch(createChatCompletionStream(messages, modelId, apiKey, reasoningLevel))
 
           if (error) {
             console.error('❌ Error creating chat completion stream: ', error)
@@ -46,38 +101,74 @@ export const Route = createFileRoute('/api/chat/stream')({
           }
 
           const encoder = new TextEncoder()
+          const hasReasoning = isReasoningModel(modelId)
+          const isGeminiBYOK = modelId.startsWith('google/') && modelId.endsWith(':byok')
+          const isAnthropicBYOK = modelId.startsWith('anthropic/') && modelId.endsWith(':byok')
+          const isDeepSeek = modelId.startsWith('deepseek/')
+
           const stream = new ReadableStream({
             async start(controller) {
               try {
-                let fullMessage = ''
-                const isGeminiBYOK = modelId.startsWith('google/') && modelId.endsWith(':byok')
-
                 const streamAsyncIterable = data.stream! as AsyncIterable<any>
+
                 for await (const chunk of streamAsyncIterable) {
-                  const content = isGeminiBYOK
-                    ? createGeminiBYOKStreamParser()(chunk)
-                    : chunk.choices[0]?.delta?.content || ''
+                  if (isGeminiBYOK) {
+                    const content = createGeminiBYOKStreamParser()(chunk)
+                    if (content) {
+                      const sseData = JSON.stringify({
+                        type: 'chunk',
+                        content,
+                        done: false,
+                      } as StreamEvent)
+                      controller.enqueue(encoder.encode(`data: ${sseData}\n\n`))
+                    }
+                  } else if (isAnthropicBYOK && hasReasoning) {
+                    const chunkText = new TextDecoder().decode(chunk as Uint8Array)
+                    const lines = chunkText.split('\n')
+                    const events = parseAnthropicStreamEvent(lines)
 
-                  if (content) {
-                    fullMessage += content
+                    for (const event of events) {
+                      const sseData = JSON.stringify(event)
+                      controller.enqueue(encoder.encode(`data: ${sseData}\n\n`))
+                    }
+                  } else if (isDeepSeek && hasReasoning) {
+                    const { content, reasoning } = parseDeepSeekReasoning(chunk)
 
-                    const sseData = JSON.stringify({
-                      type: 'chunk',
-                      content,
-                      fullMessage,
-                      done: false,
-                    })
+                    if (reasoning) {
+                      const sseData = JSON.stringify({
+                        type: 'thinking',
+                        reasoning,
+                        done: false,
+                      } as StreamEvent)
+                      controller.enqueue(encoder.encode(`data: ${sseData}\n\n`))
+                    }
 
-                    controller.enqueue(encoder.encode(`data: ${sseData}\n\n`))
+                    if (content) {
+                      const sseData = JSON.stringify({
+                        type: 'chunk',
+                        content,
+                        done: false,
+                      } as StreamEvent)
+                      controller.enqueue(encoder.encode(`data: ${sseData}\n\n`))
+                    }
+                  } else {
+                    const content = chunk.choices?.[0]?.delta?.content || ''
+
+                    if (content) {
+                      const sseData = JSON.stringify({
+                        type: 'chunk',
+                        content,
+                        done: false,
+                      } as StreamEvent)
+                      controller.enqueue(encoder.encode(`data: ${sseData}\n\n`))
+                    }
                   }
                 }
 
                 const finalData = JSON.stringify({
                   type: 'done',
-                  content: '',
-                  fullMessage: fullMessage.trim().replace(/"/g, ''),
                   done: true,
-                })
+                } as StreamEvent)
 
                 controller.enqueue(encoder.encode(`data: ${finalData}\n\n`))
                 controller.close()
@@ -88,7 +179,7 @@ export const Route = createFileRoute('/api/chat/stream')({
                   type: 'error',
                   error: 'Error processing streaming response',
                   done: true,
-                })
+                } as StreamEvent)
 
                 controller.enqueue(encoder.encode(`data: ${errorData}\n\n`))
                 controller.close()

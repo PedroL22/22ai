@@ -62,6 +62,7 @@ export const useRealtimeSync = () => {
             id: message.id,
             role: message.role,
             content: message.content,
+            reasoning: message.reasoning,
             isError: message.isError,
             modelId: message.modelId,
             createdAt: message.createdAt,

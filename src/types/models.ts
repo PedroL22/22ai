@@ -52,12 +52,39 @@ export type ModelsNames =
 
 export type ModelsDevelopers = 'OpenAI' | 'Anthropic' | 'Google' | 'Meta' | 'DeepSeek' | 'xAi' | 'Alibaba' | 'Z.ai'
 
+export type ReasoningLevel = 'low' | 'medium' | 'high'
+
+export type ReasoningConfig = {
+  openAIReasoningEffort?: ReasoningLevel
+  anthropicBudgetTokens?: number
+  deepSeekMaxTokens?: number
+}
+
+export const REASONING_LEVELS: Record<ReasoningLevel, ReasoningConfig> = {
+  low: {
+    openAIReasoningEffort: 'low',
+    anthropicBudgetTokens: 1024,
+    deepSeekMaxTokens: 4096,
+  },
+  medium: {
+    openAIReasoningEffort: 'medium',
+    anthropicBudgetTokens: 4096,
+    deepSeekMaxTokens: 8192,
+  },
+  high: {
+    openAIReasoningEffort: 'high',
+    anthropicBudgetTokens: 16000,
+    deepSeekMaxTokens: 16384,
+  },
+}
+
 export type Model = {
   id: ModelsIds
   name: ModelsNames
   developer: ModelsDevelopers
   description: string
   isFree: boolean
+  supportsReasoning?: boolean
 }
 
 export const MODELS: Model[] = [
@@ -117,6 +144,7 @@ export const MODELS: Model[] = [
     description:
       'A frontier reasoning model from DeepSeek that uses reinforcement learning to solve complex problems with step-by-step thinking processes.',
     isFree: true,
+    supportsReasoning: true,
   },
   {
     id: 'qwen/qwen3-next-80b-a3b-instruct:free',
@@ -149,6 +177,7 @@ export const MODELS: Model[] = [
     description:
       "OpenAI's latest frontier model featuring a 400K context window and adaptive reasoning that scales based on task complexity.",
     isFree: false,
+    supportsReasoning: true,
   },
   {
     id: 'openai/gpt-5-mini:byok',
@@ -157,6 +186,7 @@ export const MODELS: Model[] = [
     description:
       'A cost-efficient, high-speed variant of GPT-5, offering advanced reasoning and multimodal capabilities for production-scale apps.',
     isFree: false,
+    supportsReasoning: true,
   },
   {
     id: 'openai/o4-mini:byok',
@@ -165,6 +195,7 @@ export const MODELS: Model[] = [
     description:
       "OpenAI's efficient reasoning model optimized for tool use, coding, and autonomous workflow execution with internal thinking tokens.",
     isFree: false,
+    supportsReasoning: true,
   },
   {
     id: 'anthropic/claude-4-sonnet:byok',
@@ -173,6 +204,7 @@ export const MODELS: Model[] = [
     description:
       "Anthropic's latest high-capacity model, delivering superior performance in coding and research with state-of-the-art instruction following.",
     isFree: false,
+    supportsReasoning: true,
   },
   {
     id: 'anthropic/claude-4-opus:byok',
@@ -181,6 +213,7 @@ export const MODELS: Model[] = [
     description:
       "Anthropic's most intelligent model, designed for complex agentic workflows, long-running tasks, and frontier-level logic.",
     isFree: false,
+    supportsReasoning: true,
   },
   {
     id: 'anthropic/claude-3.7-sonnet:byok',
@@ -189,6 +222,7 @@ export const MODELS: Model[] = [
     description:
       'A highly reliable reasoning model from the Claude 3.5 series with enhanced "thinking" capabilities for accurate problem solving.',
     isFree: false,
+    supportsReasoning: true,
   },
   {
     id: 'google/gemini-3-flash-preview:byok',

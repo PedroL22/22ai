@@ -3,7 +3,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import type { Chat as ChatType, Message as MessageType } from '@prisma/client'
-import type { ModelsIds } from '~/types/models'
+import type { ModelsIds, ReasoningLevel } from '~/types/models'
 
 // Extended Chat type that includes messages (like in database with relations)
 type ChatWithMessages = ChatType & {
@@ -16,9 +16,13 @@ type ChatStore = {
   chats: ChatWithMessages[]
   selectedModelId: ModelsIds
   setSelectedModelId: (modelId: ModelsIds) => void
+  reasoningLevel: ReasoningLevel
+  setReasoningLevel: (level: ReasoningLevel) => void
   streamingMessage: string
+  streamingReasoning: string
   isStreaming: boolean
   setStreamingMessage: (message: string | ((prev: string) => string)) => void
+  setStreamingReasoning: (reasoning: string | ((prev: string) => string)) => void
   setIsStreaming: (streaming: boolean) => void
   addChat: (chat: ChatType) => void
   renameChat: (id: string, newTitle: string) => void
@@ -52,7 +56,10 @@ export const useChatStore = create<ChatStore>()(
       chats: [],
       selectedModelId: import.meta.env.VITE_OPENROUTER_DEFAULT_MODEL as ModelsIds,
       setSelectedModelId: (modelId) => set({ selectedModelId: modelId }),
+      reasoningLevel: 'medium',
+      setReasoningLevel: (level) => set({ reasoningLevel: level }),
       streamingMessage: '',
+      streamingReasoning: '',
       isStreaming: false,
       chatsDisplayMode: 'local',
       isSyncing: false,
@@ -60,6 +67,10 @@ export const useChatStore = create<ChatStore>()(
       setStreamingMessage: (message) =>
         set((state) => ({
           streamingMessage: typeof message === 'function' ? message(state.streamingMessage) : message,
+        })),
+      setStreamingReasoning: (reasoning) =>
+        set((state) => ({
+          streamingReasoning: typeof reasoning === 'function' ? reasoning(state.streamingReasoning) : reasoning,
         })),
       setIsStreaming: (streaming) => set({ isStreaming: streaming }),
       setIsInitialLoading: (loading) => set({ isInitialLoading: loading }),
@@ -184,11 +195,11 @@ export const useChatStore = create<ChatStore>()(
     {
       name: 'chat-store',
       partialize: (state) => ({
-        // Only persist local chats and display mode
         chats: state.chatsDisplayMode === 'local' ? state.chats : [],
         chatsDisplayMode: state.chatsDisplayMode,
         currentChatId: state.currentChatId,
         selectedModelId: state.selectedModelId,
+        reasoningLevel: state.reasoningLevel,
       }),
       storage: {
         getItem: (name) => {
