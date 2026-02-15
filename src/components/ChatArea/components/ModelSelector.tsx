@@ -137,7 +137,7 @@ export const ModelSelector = ({ trigger, onModelSelect, selectedModelId }: Model
         side='top'
         onOpenAutoFocus={(e) => e.preventDefault()}
         data-pending={!!pendingModel}
-        className='data-[pending=false]:min-w-[375px] overflow-hidden rounded-2xl border-none p-0 shadow-2xl sm:data-[pending=false]:min-w-[480px]'
+        className='overflow-hidden rounded-2xl border-none p-0 shadow-2xl data-[pending=false]:min-w-[375px] sm:data-[pending=false]:min-w-[480px]'
       >
         {pendingModel ? (
           <div className='w-full p-4'>
